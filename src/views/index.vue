@@ -93,10 +93,14 @@ function MA(cnt, data) {
     let sum = 0
     for (let j = 0; j < cnt; j++) {
       // d[5]收盘价
-      sum += values[i - j][5]
+      sum += values[i - j][3]
+
     }
+    console.log(sum / cnt);
     res.push(sum / cnt)
   }
+
+
   return res
 }
 
@@ -442,17 +446,21 @@ const handleSelect = (key, keyPath) => {
 }
 
 function fetchData() {
-  fetch('http://172.16.34.116:321/api.stock_data', {
-    method: 'POST',
+  const params = new URLSearchParams({
+    date: selectedDate.value,
+    page: currentPage.value,
+  });
+  fetch(`http://172.16.34.116:321/api.stock_data?${params.toString()}`, {
+    method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      // strategy: selectedStrategy,
-      // strategyIndex: key,
-      date: selectedDate.value,
-      page: currentPage.value,
-    }),
+    // body: JSON.stringify({
+    //   // strategy: selectedStrategy,
+    //   // strategyIndex: key,
+    //   date: selectedDate.value,
+    //   page: currentPage.value,
+    // }),
   })
     .then(response => {
       if (!response.ok) {
