@@ -1,49 +1,42 @@
-# tq
+# 量化可视化前端
 
-This template should help get you started developing with Vue 3 in Vite.
+## 介绍
 
-## Recommended IDE Setup
+该快照平台用于以图表形式展示某个时间段内多支股票的行情、均线、买卖点等关键数据，支持图表分页、导出、放大等操作。
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 具体功能：
 
-## Customize configuration
+- 每页展示 **3 × 3（共 9 个）图表**，包括开盘（open）、最高（high）、最低（low）、收盘（close）、涨跌幅（pct_chg）、成交量（vol）、MA均线;
+- 可选择日期查看数据;
+- 可下拉菜单选择不同策略查看数据;
+- 有多页切换功能;
+- 有买卖点标记功能;
+- 单个图表快速导出图片功能;
+- 单图表全屏放大功能;
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+## Getting Started
 
-## Project Setup
+### Create
 
-```sh
-npm install
+```
+vite+vue3+pinia
+npm 10.9.2
+node v22.14.0
 ```
 
-### Compile and Hot-Reload for Development
+```
+npm create vue@latest
 
-```sh
+npm install element-plus --save
+
+npm install echarts --save
+```
+
+### Clone & Install
+
+```
+git clone https://github.com/Meta-Scene/stock_quant_frontend.git
+cd stock_quant_frontend
+npm i
 npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
-
-`npm create vue@latest`
-
-`npm install element-plus --save`
-
-`npm install echarts --save`
-
-```
-npm -v
-10.9.2
-
-node -v
-v22.14.0
 ```
