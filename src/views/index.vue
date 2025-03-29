@@ -520,6 +520,9 @@ function fetchData() {
     .then(data => {
       console.log('成功:', data);
       const grid = data.grid_data || [];
+      if (grid.length === 0) {
+        currentPage.value = 0;
+      }
       const flattened = grid.flat().map(itemList => {
         const name = itemList[0][0] // 股票代码
         const kline = itemList.map(d => [
@@ -629,6 +632,8 @@ function formatDate(inputDate) {
 watch(selectedDate, (newDate) => {
   if (newDate) {
     console.log(selectedDate);
+    currentPage.value = 1; // 将当前页码重置为1
+
 
     // console.log(newDate);
     fetchData();
