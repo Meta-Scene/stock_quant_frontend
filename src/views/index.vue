@@ -22,37 +22,52 @@ const totalPage = computed(() => {
 })
 const currentPage = ref(1)
 // 日期选择
-const selectedDate = ref('')
+const selectedDate = ref('2025-03-26')
 // 策略选择
 const strategyIndex = ref('0')
 // 复盘条件选择
 const replayIndex = ref('0')
+// 大数据分析
+const analysisIndex = ref('0')
 // 策略名称数组
 const strategies = {
-  '0': '打板策略',
-  '1': '日内回转',
-  '2': '波段交易',
-  '3': '基本面选股',
-  '4': '套利交易',
-  '5': '专家跟随',
-  '6': '财务估值',
+  '0': '五日调整',
+  '1': '打板策略',
+  '2': '日内回转',
+  '3': '波段交易',
+  '4': '基本面选股',
+  '5': '套利交易',
+  '6': '专家跟随',
+  '7': '财务估值',
 };
-// 复盘条件数组
+// 技术指标数组
 const conditions = {
   '0': '全部',
-  '1': '涨停',
-  '2': '跌停',
-  '3': '五日变化',
+  '1': '每日涨停',
+  '2': '每日跌停',
+  '3': '半年线',
+  '4': '年线',
+  '5': '强于大盘',
+  '6': '弱于大盘',
+  '7': '大盘反向',
 };
+// 大数据分析数组
+const analysis = {
+  '0': '人气排名',
+  '1': '热门板块',
+  '2': '强势板块',
+}
 // 查询买点输入框
 const input = ref('')
 
 const selectedCondition = computed(() => {
   return conditions[replayIndex.value] || '';
 });
-
 const selectedStrategy = computed(() => {
   return strategies[strategyIndex.value] || '';
+});
+const selectedAnalysis = computed(() => {
+  return analysis[analysisIndex.value] || '';
 });
 
 // 提取k线图数据,传入某支股票的grid_data
@@ -67,6 +82,7 @@ function splitData(rawData) {
       rawData[i][2], // close
       rawData[i][5], // pct_chg
       rawData[i][6], // vol
+      // rawData[i][7], // buy
     ])
   }
   return { date, values };
@@ -94,7 +110,8 @@ function MA(cnt, data) {
       sum += values[i - j][3]
     }
     // console.log(sum / cnt);
-    res.push(sum / cnt)
+    const avg = (sum / cnt).toFixed(2);
+    res.push(Number(avg));
   }
   return res
 }
@@ -106,11 +123,41 @@ function initChart(id, stock) {
   // 提取成交量和涨跌幅
   const pctChg = data.values.map(v => v[4])
   const volumes = data.values.map(v => v[5])
+  const sv = formatDate(selectedDate.value);
+  // const sv = selectedDate.value;
+  console.log(1111);
+
+  console.log(selectedDate.value);
+  // 买点
+  // const buy = data.values.map(v => v[6])
+
+  // console.log(data.date);  // 打印 data.date 数组
+  // console.log(selectedDate);  // 打印 selectedDate
+
 
   chart.setOption({
     title: { text: stock.name, left: '0' },
     // 交叉线
-    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+    tooltip: {
+      trigger: 'axis', axisPointer: { type: 'cross' },
+      // formatter: function (params) {
+      //   const date = params[0].axisValueLabel;
+      //   const name = params[0].seriesName;
+      //   const open = params[0].data[0];
+      //   const high = params[0].data[1];
+      //   const low = params[0].data[2]; // 修改为 low
+      //   const close = params[0].data[3];
+
+      //   return `
+      //   ${date}<br />
+
+      //   open: ${open}<br />
+      //   high: ${high}<br />
+      //   low: ${low}<br />
+      //   close: ${close}
+      // `;
+      // }
+    },
     // 图例
     // legend: { data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30'] },
     // legend: { data: ['日K', '涨跌幅', 'MA5', 'MA10', '成交量'] },
@@ -122,7 +169,7 @@ function initChart(id, stock) {
         left: '13%',
         right: '10%',
         top: 40,
-        height: '40%',
+        height: '50%',
         borderColor: '#ccc', // 加框线
         show: true,
       },  // 主图区域
@@ -168,11 +215,21 @@ function initChart(id, stock) {
         offset: 3,
         splitLine: { show: false },
         axisLine: { show: false },
+      },
+      {
+        scale: true,  // 第3个 yAxis：涨跌幅,防止原始y轴其他元素变形
+        // splitArea: { show: true },
+        // name: '涨跌幅',
+        axisLabel: {
+          show: false,
+          formatter: '{value} %',
+        },
       }
+
     ],
     dataZoom: [
-      { type: 'inside', start: 50, end: 100, xAxisIndex: [0, 1] },
-      { type: 'slider', xAxisIndex: [0, 1], show: true, top: '93%', start: 50, end: 100 },
+      { type: 'inside', start: 0, end: 100, xAxisIndex: [0, 1] },
+      { type: 'slider', xAxisIndex: [0, 1], show: true, top: '93%', start: 0, end: 100 },
     ],
     series: [
       {
@@ -189,22 +246,29 @@ function initChart(id, stock) {
         xAxisIndex: 0,
         yAxisIndex: 0,
       },
-      // {
-      //   name: '涨跌幅',
-      //   type: 'line',
-      //   data: pctChg,
-      //   smooth: true,
-      //   lineStyle: {
-      //     color: '#ffa500',
-      //     width: 1.5,
-      //   },
-      //   symbol: 'circle',
-      //   symbolSize: 5,
-      //   itemStyle: {
-      //     color: '#ffa500',
-      //   },
-      // },
-
+      {
+        name: '涨跌幅',
+        type: 'line',
+        data: pctChg,
+        smooth: true,
+        lineStyle: {
+          color: '#ffa500',
+          width: 1.5,
+          opacity: 0
+        },
+        symbol: 'circle',
+        symbolSize: 5,
+        itemStyle: {
+          color: '#ffa500',
+          opacity: 0
+        },
+        tooltip: {
+          valueFormatter: function (value) {
+            return value.toFixed(2) + '%';
+          }
+        },
+        yAxisIndex: 2,
+      },
       {
         name: 'MA5',
         type: 'line',
@@ -245,7 +309,35 @@ function initChart(id, stock) {
         itemStyle: {
           color: '#915764'
         }
-      }
+      },
+      {
+        name: '指定日期收盘价',
+        type: 'scatter',
+        coordinateSystem: 'cartesian2d',
+        symbol: 'circle',
+        symbolSize: 20,
+        data: [
+          {
+            name: '当前日期',
+            value: [data.date.indexOf(sv), data.values[data.date.indexOf(sv)][1]], // selectedDate 为选中的日期
+          },
+        ],
+        itemStyle: {
+          color: '#e5e514',
+        }
+      },
+      // {
+      //   name: '买点',
+      //   type: 'scatter',
+      //   coordinateSystem: 'cartesian2d',
+      //   symbol: 'circle',
+      //   symbolSize: 10,
+      //   data: buy,
+      //   itemStyle: {
+      //     color: '#0e0a03',
+      //   }
+      // }
+
       // {
       //   name: 'MA20',
       //   type: 'line',
@@ -277,7 +369,8 @@ function initChart(id, stock) {
       //   },
       // },
     ],
-  })
+
+  });
   charts.value[id] = chart
 }
 
@@ -341,7 +434,6 @@ function prevPage() {
   if (currentPage.value > 1) {
     currentPage.value--;
     fetchData();
-    // renderCharts();
   }
 }
 
@@ -349,7 +441,6 @@ function nextPage() {
   if (currentPage.value < totalPage.value) {
     currentPage.value++;
     fetchData();
-    // renderCharts();
   }
 }
 
@@ -358,7 +449,6 @@ function gotoPage() {
   if (val >= 1 && val <= totalPage.value) {
     currentPage.value = val
     fetchData();
-    // renderCharts()
   } else {
     alert('页码无效')
   }
@@ -367,38 +457,49 @@ function gotoPage() {
 onMounted(() => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   fetchData();
-  // renderCharts()
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
 })
 
-// 更新策略
+// 更新策略类型
 const handleStrategy = (key, keyPath) => {
   // console.log(key, keyPath)
   strategyIndex.value = key;
   currentPage.value = 1;
   fetchData();
 }
-// 更新复盘条件
+// 更新技术指标
 const handleReplay = (key, keyPath) => {
   // console.log(key, keyPath)
   replayIndex.value = key;
   currentPage.value = 1;
   fetchData();
 }
+// 更新大数据分析
+const handleAnalysis = (key, keyPath) => {
+  // console.log(key, keyPath)
+  analysisIndex.value = key;
+  currentPage.value = 1;
+  fetchData();
+}
 
 function fetchData() {
-  // const date = selectedDate.value instanceof Date ? selectedDate.value.toISOString().split('T')[0] : selectedDate.value;
   const params = new URLSearchParams({
     date: formatDate(selectedDate.value),
     page: currentPage.value,
+
   });
   // console.log(date);
   // console.log(selectedDate.value);
-
-  fetch(`http://172.16.34.116:321?${params.toString()}`, {
+  let url = 'http://172.16.34.116:321/up_stop'; // 全部
+  if (replayIndex.value === '1') {
+    url = 'http://172.16.34.116:321/up_stop'; // 涨停
+  } else if (replayIndex.value === '2') {
+    url = 'http://172.16.34.116:321/down_stop'; // 跌停
+  }
+  fetch(`${url}?${params.toString()}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -419,6 +520,9 @@ function fetchData() {
     .then(data => {
       console.log('成功:', data);
       const grid = data.grid_data || [];
+      if (grid.length === 0) {
+        currentPage.value = 0;
+      }
       const flattened = grid.flat().map(itemList => {
         const name = itemList[0][0] // 股票代码
         const kline = itemList.map(d => [
@@ -429,6 +533,7 @@ function fetchData() {
           d[5],  // close
           d[7],  //涨跌幅
           d[8],  //成交量
+          // d[9],  //买点
         ])
         return { name, data: kline }
       })
@@ -505,6 +610,8 @@ function fetchData() {
 //       d[5],  // close
 //       d[7],  // pct_chg
 //       d[8],  // vol
+
+
 //     ])
 //     return { name, data: kline }
 //   })
@@ -525,6 +632,8 @@ function formatDate(inputDate) {
 watch(selectedDate, (newDate) => {
   if (newDate) {
     console.log(selectedDate);
+    currentPage.value = 1; // 将当前页码重置为1
+
 
     // console.log(newDate);
     fetchData();
@@ -546,26 +655,41 @@ watch(stockData, () => {
   <div id="app">
     <div class="top-bar">
       <div class="title-container">
-        <h1>{{ selectedStrategy }} - {{ selectedCondition }}（{{ stockNumber }}）</h1>
+        <h1>{{ selectedCondition }}（{{ stockNumber }}）</h1>
       </div>
       <div class="select-container">
         <div class="column">
-          <span class="label">买点查询</span>
-          <el-input v-model="input" style="width: 240px" placeholder="输入股票代码" clearable />
+          <span class="label">股票代码</span>
+          <el-input v-model="input" style="width: 150px" placeholder="输入股票代码" clearable />
         </div>
         <div class="column">
           <span class="label">日期</span>
-          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" />
+          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" style="width: 70%" />
         </div>
-        <div class="column">
+        <div class=" column">
           <el-menu :default-active="replayIndex" mode="horizontal" class="strategy-menu" @select="handleReplay"
             :ellipsis="false">
             <el-sub-menu index="replay">
-              <template #title>复盘条件</template>
-              <el-menu-item index="0">全部</el-menu-item>
-              <el-menu-item index="1">涨停</el-menu-item>
-              <el-menu-item index="2">跌停</el-menu-item>
-              <el-menu-item index="3">五日变化</el-menu-item>
+              <template #title>技术指标</template>
+              <el-menu-item index="0">所有</el-menu-item>
+              <el-menu-item index="1">每日涨停</el-menu-item>
+              <el-menu-item index="2">每日跌停</el-menu-item>
+              <el-menu-item index="3">半年线</el-menu-item>
+              <el-menu-item index="4">年线</el-menu-item>
+              <el-menu-item index="5">强于大盘</el-menu-item>
+              <el-menu-item index="6">弱于大盘</el-menu-item>
+              <el-menu-item index="7">大盘反向</el-menu-item>
+            </el-sub-menu>
+          </el-menu>
+        </div>
+        <div class="column">
+          <el-menu :default-active="analysisIndex" mode="horizontal" class="strategy-menu" @select="handleAnalysis"
+            :ellipsis="false">
+            <el-sub-menu index="analysis">
+              <template #title>大数据分析</template>
+              <el-menu-item index="0">人气排名</el-menu-item>
+              <el-menu-item index="1">热门板块</el-menu-item>
+              <el-menu-item index="2">强势板块</el-menu-item>
             </el-sub-menu>
           </el-menu>
         </div>
@@ -574,13 +698,14 @@ watch(stockData, () => {
             :ellipsis="false">
             <el-sub-menu index="strategy">
               <template #title>策略类型</template>
-              <el-menu-item index="0">打板策略</el-menu-item>
-              <el-menu-item index="1">日内回转</el-menu-item>
-              <el-menu-item index="2">波段交易</el-menu-item>
-              <el-menu-item index="3">基本面选股</el-menu-item>
-              <el-menu-item index="4">套利交易</el-menu-item>
-              <el-menu-item index="5">专家跟随</el-menu-item>
-              <el-menu-item index="6">财务估值</el-menu-item>
+              <el-menu-item index="0">🟢 五日调整</el-menu-item>
+              <el-menu-item index="1">🟡 打板策略</el-menu-item>
+              <el-menu-item index="2">🟡 日内回转</el-menu-item>
+              <el-menu-item index="3">🟡 波段交易</el-menu-item>
+              <el-menu-item index="4">🔴 基本面选股</el-menu-item>
+              <el-menu-item index="5">🔴 套利交易</el-menu-item>
+              <el-menu-item index="6">🔴 专家跟随</el-menu-item>
+              <el-menu-item index="7">🔴 财务估值</el-menu-item>
             </el-sub-menu>
           </el-menu>
         </div>
