@@ -44,6 +44,9 @@ const conditions = {
   '2': '跌停',
   '3': '五日变化',
 };
+// 查询买点输入框
+const input = ref('')
+
 const selectedCondition = computed(() => {
   return conditions[replayIndex.value] || '';
 });
@@ -59,9 +62,9 @@ function splitData(rawData) {
     date.push(rawData[i][0]);
     values.push([
       rawData[i][1], // open
-      rawData[i][2], // high
+      rawData[i][4], // high
       rawData[i][3], // low
-      rawData[i][4], // close
+      rawData[i][2], // close
       rawData[i][5], // pct_chg
       rawData[i][6], // vol
     ])
@@ -110,27 +113,28 @@ function initChart(id, stock) {
     tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
     // 图例
     // legend: { data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30'] },
-    legend: { data: ['日K', '涨跌幅', 'MA5', 'MA10', '成交量'] },
+    // legend: { data: ['日K', '涨跌幅', 'MA5', 'MA10', '成交量'] },
+    legend: { data: ['日K', 'MA5', 'MA10', '成交量'] },
     axisPointer: { link: [{ xAxisIndex: 'all' }] },
     grid: [
       // { left: '10%', right: '10%', bottom: '15%' },
-        {     
-            left: '13%',
-            right: '10%',
-            top: 40,
-            height: '40%',
-            borderColor: '#ccc', // 加框线
-            show: true,
-        },  // 主图区域
-        {
-            left: '13%',
-            right: '10%',
-            top: '75%',
-            bottom:'15%',
-            height: '18%',
-            borderColor: '#ccc',
-            show: true,
-        }
+      {
+        left: '13%',
+        right: '10%',
+        top: 40,
+        height: '40%',
+        borderColor: '#ccc', // 加框线
+        show: true,
+      },  // 主图区域
+      {
+        left: '13%',
+        right: '10%',
+        top: '75%',
+        bottom: '15%',
+        height: '18%',
+        borderColor: '#ccc',
+        show: true,
+      }
     ],
     xAxis: [
       {
@@ -161,7 +165,7 @@ function initChart(id, stock) {
         gridIndex: 1,
         // name: '成交量',
         splitNumber: 2,
-        offset:3,
+        offset: 3,
         splitLine: { show: false },
         axisLine: { show: false },
       }
@@ -174,7 +178,7 @@ function initChart(id, stock) {
       {
         name: '日K',
         type: 'candlestick',
-        barWidth: '5%',
+        barWidth: '30%',
         data: data.values.map(v => v.slice(0, 4)), // [open, high, low, close]
         itemStyle: {
           color: upColor,
@@ -185,21 +189,21 @@ function initChart(id, stock) {
         xAxisIndex: 0,
         yAxisIndex: 0,
       },
-      {
-        name: '涨跌幅',
-        type: 'line',
-        data: pctChg,
-        smooth: true,
-        lineStyle: {
-          color: '#ffa500',
-          width: 1.5,
-        },
-        symbol: 'circle',
-        symbolSize: 5,
-        itemStyle: {
-          color: '#ffa500',
-        },
-      },
+      // {
+      //   name: '涨跌幅',
+      //   type: 'line',
+      //   data: pctChg,
+      //   smooth: true,
+      //   lineStyle: {
+      //     color: '#ffa500',
+      //     width: 1.5,
+      //   },
+      //   symbol: 'circle',
+      //   symbolSize: 5,
+      //   itemStyle: {
+      //     color: '#ffa500',
+      //   },
+      // },
 
       {
         name: 'MA5',
@@ -237,9 +241,9 @@ function initChart(id, stock) {
         xAxisIndex: 1,
         yAxisIndex: 1,
         data: volumes,
-        barWidth: '1%',
+        barWidth: '20%',
         itemStyle: {
-            color: '#915764'
+          color: '#915764'
         }
       }
       // {
@@ -309,16 +313,16 @@ function handleFullscreenChange() {
       wrapper.style.height = ''
       chartDiv.style.width = '100%'
       chartDiv.style.height = '100%'
-    //   nextTick(() => {
-    //     chart?.resize();
-    //   });
-    // } else {
-    //   wrapper.classList.add('is-fullscreen')
-    //   nextTick(() => {
-    //     chart?.resize();
-    //   });
-    // }
-    setTimeout(() => {
+      //   nextTick(() => {
+      //     chart?.resize();
+      //   });
+      // } else {
+      //   wrapper.classList.add('is-fullscreen')
+      //   nextTick(() => {
+      //     chart?.resize();
+      //   });
+      // }
+      setTimeout(() => {
         chart?.resize();
       }, 100); // 延迟 100ms
     } else {
@@ -385,131 +389,144 @@ const handleReplay = (key, keyPath) => {
   fetchData();
 }
 
-// function fetchData() {
-//   const params = new URLSearchParams({
-//     date: selectedDate.value,
-//     page: currentPage.value,
-//   });
-//   fetch(`http://172.16.34.116:321/api.stock_data?${params.toString()}`, {
-//     method: 'GET',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     // body: JSON.stringify({
-//     //   // strategy: selectedStrategy,
-//     //   // strategyIndex: key,
-//     //   date: selectedDate.value,
-//     //   page: currentPage.value,
-//     // }),
-//   })
-//     .then(response => {
-//       if (!response.ok) {
-//         throw new Error('网络响应失败');
-//       }
-//       return response.json();
-//     })
-//     .then(data => {
-//       console.log('成功:', data);
-//       const grid = data.grid_data || [];
-//       const flattened = grid.flat().map(itemList => {
-//         const name = itemList[0][0] // 股票代码
-//         const kline = itemList.map(d => [
-//           d[1],  // 日期
-//           d[2],  // open
-//           d[3],  // high
-//           d[4],  // low
-//           d[5],  // close
-//           d[7],  //涨跌幅
-//           d[8],  //成交量
-//         ])
-//         return { name, data: kline }
-//       })
-//       stockData.value = flattened
-//       // stockNumber.value = data.total_pages * pageSize
-//       stockNumber.value = data.stock_count
-//       // renderCharts();
-//     })
-//     .catch(error => {
-//       console.error('数据获取失败:', error);
-//     });
-// }
-
 function fetchData() {
-  const mockData = {
-    "column_names": [
-      "ts_code", "trade_date", "open", "high",
-      "low", "close", "pre_close", "pct_chg", "vol"],
+  // const date = selectedDate.value instanceof Date ? selectedDate.value.toISOString().split('T')[0] : selectedDate.value;
+  const params = new URLSearchParams({
+    date: formatDate(selectedDate.value),
+    page: currentPage.value,
+  });
+  // console.log(date);
+  // console.log(selectedDate.value);
 
-    "date": "2024-01-12",
-
-    "grid_data": [
-      [
-        [
-          ["430017.BJ", "20240111", 14.32, 14.93, 14.03, 14.23, 13.92, 2.23, 30076.77],
-          ["430017.BJ", "20240112", 13.96, 14.14, 13.27, 13.27, 14.23, -6.75, 35741.96],
-          ["430017.BJ", "20240115", 13.23, 13.41, 12.72, 12.75, 13.27, -3.92, 23413.75]],
-        [
-          ["430047.BJ", "20240111", 17.25, 18.5, 17.25, 18.12, 17.08, 6.09, 30244.24],
-          ["430047.BJ", "20240112", 17.94, 18.27, 17.52, 17.66, 18.12, -2.54, 18176.61],
-          ["430047.BJ", "20240115", 17.52, 18.15, 17.52, 17.84, 17.66, 1.02, 15487.43]],
-        [
-          ["430090.BJ", "20240111", 5.01, 5.3, 5.01, 5.12, 5.04, 1.59, 113921.8],
-          ["430090.BJ", "20240112", 5.1, 5.12, 4.39, 4.41, 5.12, -13.87, 195351.01],
-          ["430090.BJ", "20240115", 4.36, 4.44, 4.06, 4.07, 4.41, -7.71, 136154.68]]],
-      [
-        [
-          ["430139.BJ", "20240111", 13.2, 13.6, 13.17, 13.47, 13.19, 2.12, 23430.29],
-          ["430139.BJ", "20240112", 13.35, 13.57, 12.53, 12.55, 13.47, -6.83, 32109.02],
-          ["430139.BJ", "20240115", 12.51, 13.16, 11.95, 12.55, 12.55, 0.0, 34289.83]],
-        [
-          ["430198.BJ", "20240111", 8.96, 9.3, 8.84, 9.05, 8.89, 1.8, 46919.64],
-          ["430198.BJ", "20240112", 9.06, 9.07, 7.87, 7.91, 9.05, -12.6, 71167.1],
-          ["430198.BJ", "20240115", 7.98, 8.0, 7.44, 7.5, 7.91, -5.18, 54171.58]],
-        [
-          ["430300.BJ", "20240111", 12.19, 12.68, 12.19, 12.3, 12.33, -0.24, 22148.13],
-          ["430300.BJ", "20240112", 12.11, 12.35, 10.45, 10.45, 12.3, -15.04, 40485.19],
-          ["430300.BJ", "20240115", 10.45, 10.9, 10.0, 10.34, 10.45, -1.05, 26087.01]]],
-      [
-        [
-          ["430418.BJ", "20240111", 16.23, 16.56, 15.81, 16.25, 16.42, -1.04, 16843.22],
-          ["430418.BJ", "20240112", 16.11, 16.34, 14.53, 14.55, 16.25, -10.46, 27629.35],
-          ["430418.BJ", "20240115", 14.34, 15.09, 13.92, 14.55, 14.55, 0.0, 23918.28]],
-        [
-          ["430425.BJ", "20240111", 16.88, 16.97, 16.42, 16.81, 16.81, 0.0, 16275.92],
-          ["430425.BJ", "20240112", 16.91, 16.91, 14.26, 14.27, 16.81, -15.11, 30662.16],
-          ["430425.BJ", "20240115", 14.07, 14.91, 13.83, 14.08, 14.27, -1.33, 16026.4]],
-        [
-          ["430476.BJ", "20240111", 12.93, 13.24, 12.84, 13.18, 12.93, 1.93, 6864.85],
-          ["430476.BJ", "20240112", 13.25, 13.71, 12.39, 12.45, 13.18, -5.54, 11543.37],
-          ["430476.BJ", "20240115", 12.47, 12.54, 11.81, 11.96, 12.45, -3.94, 10675.44]]]],
-    "page": 1,
-    "total_pages": 27
-  }
-
-  const grid = mockData.grid_data || []
-  const flattened = grid.flat().map(itemList => {
-    const name = itemList[0][0] // 股票代码
-    const kline = itemList.map(d => [
-      d[1],  // 日期
-      d[2],  // open
-      d[3],  // high
-      d[4],  // low
-      d[5],  // close
-      d[7],  // pct_chg
-      d[8],  // vol
-    ])
-    return { name, data: kline }
+  fetch(`http://172.16.34.116:321?${params.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    // body: JSON.stringify({
+    //   // strategy: selectedStrategy,
+    //   // strategyIndex: key,
+    //   date: selectedDate.value,
+    //   page: currentPage.value,
+    // }),
   })
-
-  stockData.value = flattened
-  stockNumber.value = flattened.length
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('网络响应失败');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('成功:', data);
+      const grid = data.grid_data || [];
+      const flattened = grid.flat().map(itemList => {
+        const name = itemList[0][0] // 股票代码
+        const kline = itemList.map(d => [
+          d[1],  // 日期
+          d[2],  // open
+          d[3],  // high
+          d[4],  // low
+          d[5],  // close
+          d[7],  //涨跌幅
+          d[8],  //成交量
+        ])
+        return { name, data: kline }
+      })
+      stockData.value = flattened
+      // stockNumber.value = data.total_pages * pageSize
+      stockNumber.value = data.stock_count
+      // renderCharts();
+    })
+    .catch(error => {
+      console.error('数据获取失败:', error);
+    });
 }
 
+// function fetchData() {
+//   const mockData = {
+//     "column_names": [
+//       "ts_code", "trade_date", "open", "high",
+//       "low", "close", "pre_close", "pct_chg", "vol"],
+
+//     "date": "2024-01-12",
+
+//     "grid_data": [
+//       [
+//         [
+//           ["430017.BJ", "20240111", 14.32, 14.93, 14.03, 14.23, 13.92, 2.23, 30076.77],
+//           ["430017.BJ", "20240112", 13.96, 14.14, 13.27, 13.27, 14.23, -6.75, 35741.96],
+//           ["430017.BJ", "20240115", 13.23, 13.41, 12.72, 12.75, 13.27, -3.92, 23413.75]],
+//         [
+//           ["430047.BJ", "20240111", 17.25, 18.5, 17.25, 18.12, 17.08, 6.09, 30244.24],
+//           ["430047.BJ", "20240112", 17.94, 18.27, 17.52, 17.66, 18.12, -2.54, 18176.61],
+//           ["430047.BJ", "20240115", 17.52, 18.15, 17.52, 17.84, 17.66, 1.02, 15487.43]],
+//         [
+//           ["430090.BJ", "20240111", 5.01, 5.3, 5.01, 5.12, 5.04, 1.59, 113921.8],
+//           ["430090.BJ", "20240112", 5.1, 5.12, 4.39, 4.41, 5.12, -13.87, 195351.01],
+//           ["430090.BJ", "20240115", 4.36, 4.44, 4.06, 4.07, 4.41, -7.71, 136154.68]]],
+//       [
+//         [
+//           ["430139.BJ", "20240111", 13.2, 13.6, 13.17, 13.47, 13.19, 2.12, 23430.29],
+//           ["430139.BJ", "20240112", 13.35, 13.57, 12.53, 12.55, 13.47, -6.83, 32109.02],
+//           ["430139.BJ", "20240115", 12.51, 13.16, 11.95, 12.55, 12.55, 0.0, 34289.83]],
+//         [
+//           ["430198.BJ", "20240111", 8.96, 9.3, 8.84, 9.05, 8.89, 1.8, 46919.64],
+//           ["430198.BJ", "20240112", 9.06, 9.07, 7.87, 7.91, 9.05, -12.6, 71167.1],
+//           ["430198.BJ", "20240115", 7.98, 8.0, 7.44, 7.5, 7.91, -5.18, 54171.58]],
+//         [
+//           ["430300.BJ", "20240111", 12.19, 12.68, 12.19, 12.3, 12.33, -0.24, 22148.13],
+//           ["430300.BJ", "20240112", 12.11, 12.35, 10.45, 10.45, 12.3, -15.04, 40485.19],
+//           ["430300.BJ", "20240115", 10.45, 10.9, 10.0, 10.34, 10.45, -1.05, 26087.01]]],
+//       [
+//         [
+//           ["430418.BJ", "20240111", 16.23, 16.56, 15.81, 16.25, 16.42, -1.04, 16843.22],
+//           ["430418.BJ", "20240112", 16.11, 16.34, 14.53, 14.55, 16.25, -10.46, 27629.35],
+//           ["430418.BJ", "20240115", 14.34, 15.09, 13.92, 14.55, 14.55, 0.0, 23918.28]],
+//         [
+//           ["430425.BJ", "20240111", 16.88, 16.97, 16.42, 16.81, 16.81, 0.0, 16275.92],
+//           ["430425.BJ", "20240112", 16.91, 16.91, 14.26, 14.27, 16.81, -15.11, 30662.16],
+//           ["430425.BJ", "20240115", 14.07, 14.91, 13.83, 14.08, 14.27, -1.33, 16026.4]],
+//         [
+//           ["430476.BJ", "20240111", 12.93, 13.24, 12.84, 13.18, 12.93, 1.93, 6864.85],
+//           ["430476.BJ", "20240112", 13.25, 13.71, 12.39, 12.45, 13.18, -5.54, 11543.37],
+//           ["430476.BJ", "20240115", 12.47, 12.54, 11.81, 11.96, 12.45, -3.94, 10675.44]]]],
+//     "page": 1,
+//     "total_pages": 27
+//   }
+
+//   const grid = mockData.grid_data || []
+//   const flattened = grid.flat().map(itemList => {
+//     const name = itemList[0][0] // 股票代码
+//     const kline = itemList.map(d => [
+//       d[1],  // 日期
+//       d[2],  // open
+//       d[3],  // high
+//       d[4],  // low
+//       d[5],  // close
+//       d[7],  // pct_chg
+//       d[8],  // vol
+//     ])
+//     return { name, data: kline }
+//   })
+
+//   stockData.value = flattened
+//   stockNumber.value = flattened.length
+// }
+function formatDate(inputDate) {
+  const date = new Date(inputDate);
+  // YYYY-MM-DD
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 
 watch(selectedDate, (newDate) => {
   if (newDate) {
-    // console.log(selectedDate);
+    console.log(selectedDate);
+
+    // console.log(newDate);
     fetchData();
   }
 });
@@ -528,41 +545,47 @@ watch(stockData, () => {
 <template>
   <div id="app">
     <div class="top-bar">
-  <div class="title-container">
-    <h1>{{ selectedStrategy }} - {{selectedCondition}}（{{ stockNumber }}）</h1>
-  </div>
-  <div class="select-container">
-    <div class="column">
-      <span class="label">📅 日期</span>
-      <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" />
+      <div class="title-container">
+        <h1>{{ selectedStrategy }} - {{ selectedCondition }}（{{ stockNumber }}）</h1>
+      </div>
+      <div class="select-container">
+        <div class="column">
+          <span class="label">买点查询</span>
+          <el-input v-model="input" style="width: 240px" placeholder="输入股票代码" clearable />
+        </div>
+        <div class="column">
+          <span class="label">日期</span>
+          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" />
+        </div>
+        <div class="column">
+          <el-menu :default-active="replayIndex" mode="horizontal" class="strategy-menu" @select="handleReplay"
+            :ellipsis="false">
+            <el-sub-menu index="replay">
+              <template #title>复盘条件</template>
+              <el-menu-item index="0">全部</el-menu-item>
+              <el-menu-item index="1">涨停</el-menu-item>
+              <el-menu-item index="2">跌停</el-menu-item>
+              <el-menu-item index="3">五日变化</el-menu-item>
+            </el-sub-menu>
+          </el-menu>
+        </div>
+        <div class="column">
+          <el-menu :default-active="strategyIndex" mode="horizontal" class="strategy-menu" @select="handleStrategy"
+            :ellipsis="false">
+            <el-sub-menu index="strategy">
+              <template #title>策略类型</template>
+              <el-menu-item index="0">打板策略</el-menu-item>
+              <el-menu-item index="1">日内回转</el-menu-item>
+              <el-menu-item index="2">波段交易</el-menu-item>
+              <el-menu-item index="3">基本面选股</el-menu-item>
+              <el-menu-item index="4">套利交易</el-menu-item>
+              <el-menu-item index="5">专家跟随</el-menu-item>
+              <el-menu-item index="6">财务估值</el-menu-item>
+            </el-sub-menu>
+          </el-menu>
+        </div>
+      </div>
     </div>
-    <div class="column">
-      <el-menu :default-active="replayIndex" mode="horizontal" class="strategy-menu" @select="handleReplay" :ellipsis="false">
-        <el-sub-menu index="replay">
-          <template #title>复盘条件</template>
-          <el-menu-item index="0">全部</el-menu-item>
-          <el-menu-item index="1">涨停</el-menu-item>
-          <el-menu-item index="2">跌停</el-menu-item>
-          <el-menu-item index="3">五日变化</el-menu-item>
-        </el-sub-menu>
-      </el-menu>
-    </div>
-    <div class="column">
-      <el-menu :default-active="strategyIndex" mode="horizontal" class="strategy-menu" @select="handleStrategy" :ellipsis="false">
-        <el-sub-menu index="strategy">
-          <template #title>策略类型</template>
-          <el-menu-item index="0">打板策略</el-menu-item>
-          <el-menu-item index="1">日内回转</el-menu-item>
-          <el-menu-item index="2">波段交易</el-menu-item>
-          <el-menu-item index="3">基本面选股</el-menu-item>
-          <el-menu-item index="4">套利交易</el-menu-item>
-          <el-menu-item index="5">专家跟随</el-menu-item>
-          <el-menu-item index="6">财务估值</el-menu-item>
-        </el-sub-menu>
-      </el-menu>
-    </div>
-  </div>
-</div>
 
 
     <div class="grid-container">
@@ -597,12 +620,13 @@ body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: #333;
 }
+
 /* 顶部栏 */
 .top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color:#f9f9f9;
+  background-color: #f9f9f9;
   padding: 10px 24px;
   border-bottom: 1px solid #e0e0e0;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
@@ -653,9 +677,10 @@ body {
   height: 36px;
   line-height: 36px;
 }
+
 /* 菜单选中 */
-.el-menu--horizontal > .el-menu-item.is-active,
-.el-menu--horizontal > .el-sub-menu.is-active .el-sub-menu__title {
+.el-menu--horizontal>.el-menu-item.is-active,
+.el-menu--horizontal>.el-sub-menu.is-active .el-sub-menu__title {
   background-color: #f9f9f9;
   border-radius: 6px;
   font-weight: bold;
@@ -663,15 +688,15 @@ body {
   color: #555 !important;
 }
 
-.el-menu--horizontal > .el-menu-item:hover,
-.el-menu--horizontal > .el-sub-menu:hover .el-sub-menu__title {
+.el-menu--horizontal>.el-menu-item:hover,
+.el-menu--horizontal>.el-sub-menu:hover .el-sub-menu__title {
   background-color: #ececec;
   border-radius: 6px;
   color: #555;
 }
 
-.el-menu--horizontal > .el-menu-item,
-.el-menu--horizontal > .el-sub-menu .el-sub-menu__title {
+.el-menu--horizontal>.el-menu-item,
+.el-menu--horizontal>.el-sub-menu .el-sub-menu__title {
   border-bottom: none !important;
 }
 
