@@ -127,6 +127,8 @@ function initChart(id, stock) {
   console.log(1111);
 
   console.log(selectedDate.value);
+  // 买点
+  // const buy = data.values.map(v => v[6])
 
   // console.log(data.date);  // 打印 data.date 数组
   // console.log(selectedDate);  // 打印 selectedDate
@@ -322,7 +324,19 @@ function initChart(id, stock) {
         itemStyle: {
           color: '#e5e514',
         }
-      }
+      },
+      // {
+      //   name: '买点',
+      //   type: 'scatter',
+      //   coordinateSystem: 'cartesian2d',
+      //   symbol: 'circle',
+      //   symbolSize: 10,
+      //   data: buy,
+      //   itemStyle: {
+      //     color: '#0e0a03',
+      //   }
+      // }
+
       // {
       //   name: 'MA20',
       //   type: 'line',
@@ -639,13 +653,13 @@ watch(stockData, () => {
       <div class="select-container">
         <div class="column">
           <span class="label">股票代码</span>
-          <el-input v-model="input" style="width: 240px" placeholder="输入股票代码" clearable />
+          <el-input v-model="input" style="width: 150px" placeholder="输入股票代码" clearable />
         </div>
         <div class="column">
           <span class="label">日期</span>
-          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" />
+          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" style="width: 70%" />
         </div>
-        <div class="column">
+        <div class=" column">
           <el-menu :default-active="replayIndex" mode="horizontal" class="strategy-menu" @select="handleReplay"
             :ellipsis="false">
             <el-sub-menu index="replay">
@@ -677,14 +691,14 @@ watch(stockData, () => {
             :ellipsis="false">
             <el-sub-menu index="strategy">
               <template #title>策略类型</template>
-              <el-menu-item index="0">五日调整</el-menu-item>
-              <el-menu-item index="1">打板策略</el-menu-item>
-              <el-menu-item index="2">日内回转</el-menu-item>
-              <el-menu-item index="3">波段交易</el-menu-item>
-              <el-menu-item index="4">基本面选股</el-menu-item>
-              <el-menu-item index="5">套利交易</el-menu-item>
-              <el-menu-item index="6">专家跟随</el-menu-item>
-              <el-menu-item index="7">财务估值</el-menu-item>
+              <el-menu-item index="0">🟢 五日调整</el-menu-item>
+              <el-menu-item index="1">🟡 打板策略</el-menu-item>
+              <el-menu-item index="2">🟡 日内回转</el-menu-item>
+              <el-menu-item index="3">🟡 波段交易</el-menu-item>
+              <el-menu-item index="4">🔴 基本面选股</el-menu-item>
+              <el-menu-item index="5">🔴 套利交易</el-menu-item>
+              <el-menu-item index="6">🔴 专家跟随</el-menu-item>
+              <el-menu-item index="7">🔴 财务估值</el-menu-item>
             </el-sub-menu>
           </el-menu>
         </div>
