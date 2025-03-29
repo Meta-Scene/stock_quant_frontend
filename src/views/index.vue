@@ -82,6 +82,7 @@ function splitData(rawData) {
       rawData[i][2], // close
       rawData[i][5], // pct_chg
       rawData[i][6], // vol
+      // rawData[i][7], // buy
     ])
   }
   return { date, values };
@@ -529,6 +530,7 @@ function fetchData() {
           d[5],  // close
           d[7],  //涨跌幅
           d[8],  //成交量
+          // d[9],  //买点
         ])
         return { name, data: kline }
       })
