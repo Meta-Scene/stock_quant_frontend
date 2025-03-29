@@ -22,7 +22,7 @@ const totalPage = computed(() => {
 })
 const currentPage = ref(1)
 // 日期选择
-const selectedDate = ref('')
+const selectedDate = ref('2025-03-26')
 // 策略选择
 const strategyIndex = ref('0')
 // 复盘条件选择
@@ -42,7 +42,6 @@ const conditions = {
   '0': '全部',
   '1': '涨停',
   '2': '跌停',
-  '3': '五日变化',
 };
 // 查询买点输入框
 const input = ref('')
@@ -171,8 +170,8 @@ function initChart(id, stock) {
       }
     ],
     dataZoom: [
-      { type: 'inside', start: 50, end: 100, xAxisIndex: [0, 1] },
-      { type: 'slider', xAxisIndex: [0, 1], show: true, top: '93%', start: 50, end: 100 },
+      { type: 'inside', start: 0, end: 100, xAxisIndex: [0, 1] },
+      { type: 'slider', xAxisIndex: [0, 1], show: true, top: '93%', start: 0, end: 100 },
     ],
     series: [
       {
@@ -550,7 +549,7 @@ watch(stockData, () => {
       </div>
       <div class="select-container">
         <div class="column">
-          <span class="label">买点查询</span>
+          <span class="label">股票代码</span>
           <el-input v-model="input" style="width: 240px" placeholder="输入股票代码" clearable />
         </div>
         <div class="column">
@@ -565,7 +564,6 @@ watch(stockData, () => {
               <el-menu-item index="0">全部</el-menu-item>
               <el-menu-item index="1">涨停</el-menu-item>
               <el-menu-item index="2">跌停</el-menu-item>
-              <el-menu-item index="3">五日变化</el-menu-item>
             </el-sub-menu>
           </el-menu>
         </div>
