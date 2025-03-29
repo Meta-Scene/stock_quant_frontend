@@ -40,3 +40,9 @@ cd stock_quant_frontend
 npm i
 npm run dev
 ```
+
+- 日k线顺序修改✔
+- 加买点搜索框✔
+- 删涨跌幅✔
+- 日期传参失败✔
+- 买卖点
