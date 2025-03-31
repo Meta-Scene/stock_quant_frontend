@@ -1,10 +1,9 @@
 <script setup>
 import { onMounted, ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
-// 导入模拟数据
-// import { stockData } from '@/data/stockData';
-const stockNumber = ref(0)
-const stockData = ref([])
+
+const stockNumber = ref(0)//总数
+const stockData = ref([])//数据
 // 颜色
 const upColor = '#ec0000';
 const upBorderColor = '#8A0000';
@@ -20,6 +19,7 @@ const pageSize = 9;
 const totalPage = computed(() => {
   return Math.ceil(stockNumber.value / pageSize)
 })
+// 当前页数
 const currentPage = ref(1)
 // 日期选择
 const selectedDate = ref('2025-03-26')
@@ -30,6 +30,8 @@ const strategyIndex = ref('0')
 const replayIndex = ref('0')
 // 大数据分析
 const analysisIndex = ref('0')
+// 查询买点输入框
+const input = ref('')
 // 策略名称数组
 const strategies = {
   '0': '五日调整',
@@ -58,9 +60,8 @@ const analysis = {
   '1': '热门板块',
   '2': '强势板块',
 }
-// 查询买点输入框
-const input = ref('')
 
+// 计算选中的复盘条件、策略和大数据分析
 const selectedCondition = computed(() => {
   return conditions[replayIndex.value] || '';
 });
@@ -128,14 +129,12 @@ function initChart(id, stock) {
   const sv = formatDate(selectedDate.value);
   // const sv = selectedDate.value;
   // console.log(1111);
-
   // console.log(selectedDate.value);
   // 买点
   // qqqqqqqqqq
   const buy = data.values.map(v => v[6])
-
-  // console.log(data.date);  // 打印 data.date 数组
-  // console.log(selectedDate);  // 打印 selectedDate
+  // console.log(data.date);
+  // console.log(selectedDate);
 
 
   chart.setOption({
@@ -143,31 +142,11 @@ function initChart(id, stock) {
     // 交叉线
     tooltip: {
       trigger: 'axis', axisPointer: { type: 'cross' },
-      // formatter: function (params) {
-      //   const date = params[0].axisValueLabel;
-      //   const name = params[0].seriesName;
-      //   const open = params[0].data[0];
-      //   const high = params[0].data[1];
-      //   const low = params[0].data[2]; // 修改为 low
-      //   const close = params[0].data[3];
-
-      //   return `
-      //   ${date}<br />
-
-      //   open: ${open}<br />
-      //   high: ${high}<br />
-      //   low: ${low}<br />
-      //   close: ${close}
-      // `;
-      // }
     },
     // 图例
-    // legend: { data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30'] },
-    // legend: { data: ['日K', '涨跌幅', 'MA5', 'MA10', '成交量'] },
     legend: { data: ['日K', 'MA5', 'MA10', '成交量'] },
     axisPointer: { link: [{ xAxisIndex: 'all' }] },
     grid: [
-      // { left: '10%', right: '10%', bottom: '15%' },
       {
         left: '13%',
         right: '10%',
@@ -228,7 +207,6 @@ function initChart(id, stock) {
           formatter: '{value} %',
         },
       }
-
     ],
     dataZoom: [
       { type: 'inside', start: 0, end: 100, xAxisIndex: [0, 1] },
@@ -322,7 +300,7 @@ function initChart(id, stock) {
         data: [
           {
             name: '当前日期',
-            value: [data.date.indexOf(sv), data.values[data.date.indexOf(sv)][1]], // selectedDate 为选中的日期
+            value: [data.date.indexOf(sv), data.values[data.date.indexOf(sv)][1]],
           },
         ],
         itemStyle: {
@@ -341,49 +319,16 @@ function initChart(id, stock) {
           color: '#0e0a03',
         },
         label: {
-          show: true,  // 显示文本
-          position: 'inside',  // 文本居中
-          align: 'center',  // 水平居中
-          verticalAlign: 'middle',  // 垂直居中
-          color: '#fff',  // 设置文本颜色为白色
-          fontSize: 11,  // 设置字体大小
-          // fontWeight: 'bold',  // 设置字体加粗
-          formatter: 'B'  // 显示字母 B
+          show: true,
+          position: 'inside',
+          align: 'center',
+          verticalAlign: 'middle',
+          color: '#fff',
+          fontSize: 11,
+          formatter: 'B'
         },
       }] : [])
-
-      // {
-      //   name: 'MA20',
-      //   type: 'line',
-      //   data: MA(20, data),
-      //   smooth: true,
-      //   lineStyle: {
-      //     color: '#32cd32',
-      //     width: 1.5,
-      //   },
-      //   symbol: 'circle',
-      //   symbolSize: 5,
-      //   itemStyle: {
-      //     color: '#32cd32',
-      //   },
-      // },
-      // {
-      //   name: 'MA30',
-      //   type: 'line',
-      //   data: MA(30, data),
-      //   smooth: true,
-      //   lineStyle: {
-      //     color: '#ffa500',
-      //     width: 1.5,
-      //   },
-      //   symbol: 'circle',
-      //   symbolSize: 5,
-      //   itemStyle: {
-      //     color: '#ffa500',
-      //   },
-      // },
     ],
-
   });
   charts.value[id] = chart
 }
@@ -420,15 +365,6 @@ function handleFullscreenChange() {
       wrapper.style.height = ''
       chartDiv.style.width = '100%'
       chartDiv.style.height = '100%'
-      //   nextTick(() => {
-      //     chart?.resize();
-      //   });
-      // } else {
-      //   wrapper.classList.add('is-fullscreen')
-      //   nextTick(() => {
-      //     chart?.resize();
-      //   });
-      // }
       setTimeout(() => {
         chart?.resize();
       }, 100); // 延迟 100ms
@@ -441,8 +377,6 @@ function handleFullscreenChange() {
     if (btn) btn.textContent = isFullscreen ? '×' : '全屏'
   })
 }
-
-
 
 function prevPage() {
   if (currentPage.value > 1) {
@@ -538,7 +472,8 @@ function fetchData() {
       if (grid.length === 0) {
         currentPage.value = 0;
       }
-      const flattened = grid.flat().map(itemList => {
+      // const flattened = grid.flat().map(itemList => {
+      const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
         const kline = itemList.map(d => [
           d[1],  // 日期
@@ -551,19 +486,16 @@ function fetchData() {
           d[9],  //买点
         ])
         // console.log(kline[8]);
-
         return { name, data: kline }
       })
       stockData.value = flattened
-      // stockNumber.value = data.total_pages * pageSize
       stockNumber.value = data.stock_count
-      // renderCharts();
     })
     .catch(error => {
       console.error('数据获取失败:', error);
     });
 }
-
+// 模拟数据
 // function fetchData() {
 //   const mockData = {
 //     "column_names": [
@@ -637,6 +569,7 @@ function fetchData() {
 //   stockData.value = flattened
 //   stockNumber.value = flattened.length
 // }
+
 function formatDate(inputDate) {
   const date = new Date(inputDate);
   // YYYY-MM-DD
@@ -646,14 +579,10 @@ function formatDate(inputDate) {
   return `${year}-${month}-${day}`;
 }
 
-
 watch(selectedDate, (newDate) => {
   if (newDate) {
     // console.log(selectedDate);
     currentPage.value = 1; // 将当前页码重置为1
-
-
-    // console.log(newDate);
     fetchData();
   }
 });
@@ -682,7 +611,7 @@ watch(stockData, () => {
         </div>
         <div class="column">
           <span class="label">日期</span>
-          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" style="width: 70%" />
+          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" style="width: 150px" />
         </div>
         <div class=" column">
           <el-menu :default-active="replayIndex" mode="horizontal" class="strategy-menu" @select="handleReplay"
@@ -730,15 +659,13 @@ watch(stockData, () => {
       </div>
     </div>
 
-
     <div class="grid-container">
-      <div class="chart-wrapper" v-for="(stock, idx) in stockData" :key="stock.name">
+      <div class="chart-wrapper" v-for="(stock, idx) in stockData" :key="stock.idx">
         <div class="chart" :id="`chart${idx}`"></div>
         <button class="fullscreen-btn" @click="fullscreen(idx)">全屏</button>
         <button class="fullscreen-btn" style="right: 80px" @click="exportChart(idx, stock.name)">导出</button>
       </div>
     </div>
-
 
     <div class="controls">
       <button @click="prevPage()">上一页</button>
@@ -749,7 +676,6 @@ watch(stockData, () => {
       <button @click="gotoPage()">跳转</button>
     </div>
   </div>
-  <!-- <RouterView /> -->
 </template>
 
 <style>
