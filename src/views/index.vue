@@ -308,26 +308,57 @@ function initChart(id, stock) {
         }
       },
       // qqqqqqq
-      ...(buy.length > 0 && buy.some(point => point !== 0) ? [{
-        name: '买点',
-        type: 'scatter',
-        coordinateSystem: 'cartesian2d',
-        symbol: 'rect',
-        symbolSize: [15, 15],
-        data: buy.filter(point => point !== 0),  // 过滤掉值为0的买点
-        itemStyle: {
-          color: '#0e0a03',
-        },
-        label: {
-          show: true,
-          position: 'inside',
-          align: 'center',
-          verticalAlign: 'middle',
-          color: '#fff',
-          fontSize: 11,
-          formatter: 'B'
-        },
-      }] : [])
+      // ...(buy.length > 0 && buy.some(point => point !== 0) ? [{
+      //   name: '买点',
+      //   type: 'scatter',
+      //   coordinateSystem: 'cartesian2d',
+      //   symbol: 'rect',
+      //   symbolSize: [15, 15],
+      //   data: buy.filter(point => point !== 0),  // 过滤掉值为0的买点
+      //   itemStyle: {
+      //     color: '#0e0a03',
+      //   },
+      //   label: {
+      //     show: true,
+      //     position: 'inside',
+      //     align: 'center',
+      //     verticalAlign: 'middle',
+      //     color: '#fff',
+      //     fontSize: 11,
+      //     formatter: 'B'
+      //   },
+      // }] : [])
+      ...(buy.length > 0 && buy.some(point => point !== 0)
+        ? [{
+          name: '买点',
+          type: 'scatter',
+          coordinateSystem: 'cartesian2d',
+          symbol: 'rect',
+          symbolSize: [15, 15],
+          data: buy.map((point, idx) => {
+            if (point !== 0) {
+              return {
+                value: [idx, data.values[idx][3]], // idx 是日期索引，data.values[idx][3] 是收盘价
+                symbolSize: 15,
+              }
+            }
+            return null;
+          }).filter(v => v !== null), // 过滤掉空值
+          itemStyle: {
+            color: '#0e0a03',
+          },
+          label: {
+            show: true,
+            position: 'inside',
+            align: 'center',
+            verticalAlign: 'middle',
+            color: '#fff',
+            fontSize: 11,
+            formatter: 'B'
+          },
+        }]
+        : [])
+
     ],
   });
   charts.value[id] = chart
