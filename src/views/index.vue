@@ -31,7 +31,7 @@ const replayIndex = ref('0')
 // 大数据分析
 const analysisIndex = ref('0')
 // 查询买点输入框
-const input = ref('')
+const stockCode = ref('')
 // 策略名称数组
 const strategies = {
   '0': '五日调整',
@@ -45,7 +45,7 @@ const strategies = {
 };
 // 技术指标数组
 const conditions = {
-  '0': '全部',
+  '0': '所有',
   '1': '每日涨停',
   '2': '每日跌停',
   '3': '半年线',
@@ -60,7 +60,13 @@ const analysis = {
   '1': '热门板块',
   '2': '强势板块',
 }
-
+// 监听股票代码输入并按回车键进行查询
+const onStockCodeInput = (event) => {
+  if (event.key === 'Enter') { // 检测是否按下回车键
+    selectedDate.value = ''
+    fetchData()
+  }
+}
 // 计算选中的复盘条件、策略和大数据分析
 const selectedCondition = computed(() => {
   return conditions[replayIndex.value] || '';
@@ -338,7 +344,7 @@ function initChart(id, stock) {
           data: buy.map((point, idx) => {
             if (point !== 0) {
               return {
-                value: [idx, data.values[idx][3]], // idx 是日期索引，data.values[idx][3] 是收盘价
+                value: [data.date[idx], point],
                 symbolSize: 15,
               }
             }
@@ -479,6 +485,10 @@ function fetchData() {
   } else if (replayIndex.value === '2') {
     url = 'http://172.16.34.116:321/down_stop'; // 跌停
   }
+    // 如果输入了股票代码，查询特定股票的数据
+  // if (stockCode.value) {
+  //   url = `http://your-backend-url.com/query_stock?stockCode=${stockCode.value}`
+  // }
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
     headers: {
@@ -638,7 +648,7 @@ watch(stockData, () => {
       <div class="select-container">
         <div class="column">
           <span class="label">股票代码</span>
-          <el-input v-model="input" style="width: 150px" placeholder="输入股票代码" clearable />
+          <el-input v-model="stockCode" style="width: 150px" placeholder="输入股票代码" clearable @input="onStockCodeInput"/>
         </div>
         <div class="column">
           <span class="label">日期</span>
