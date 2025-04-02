@@ -31,7 +31,7 @@ const replayIndex = ref('0')
 // 大数据分析
 const analysisIndex = ref('0')
 // 查询买点输入框
-const input = ref('')
+const stockCode = ref('')
 // 策略名称数组
 const strategies = {
   '0': '五日调整',
@@ -45,7 +45,7 @@ const strategies = {
 };
 // 技术指标数组
 const conditions = {
-  '0': '全部',
+  '0': '所有',
   '1': '每日涨停',
   '2': '每日跌停',
   '3': '半年线',
@@ -60,7 +60,12 @@ const analysis = {
   '1': '热门板块',
   '2': '强势板块',
 }
-
+// 监听股票代码输入并按回车键进行查询
+const onStockCodeInput = (event) => {
+  selectedDate.value = ''
+  console.log('股票代码变化，日期已清空');
+  fetchData()
+}
 // 计算选中的复盘条件、策略和大数据分析
 const selectedCondition = computed(() => {
   return conditions[replayIndex.value] || '';
@@ -86,6 +91,14 @@ function splitData(rawData) {
       rawData[i][6], // vol
       // qqqqqqqqqqqqqq
       rawData[i][7], // buy
+      // rawData[i][1].toFixed(2), // open
+      // rawData[i][4].toFixed(2), // high
+      // rawData[i][3].toFixed(2), // low
+      // rawData[i][2].toFixed(2), // close
+      // rawData[i][5].toFixed(2), // pct_chg
+      // rawData[i][6].toFixed(2), // vol
+      // // 保留两位小数的买点
+      // rawData[i][7], // buy
     ])
   }
   return { date, values };
@@ -121,6 +134,9 @@ function MA(cnt, data) {
 
 // 单图表初始化
 function initChart(id, stock) {
+  if (charts.value[id]) {
+    charts.value[id].dispose();
+  }
   const data = splitData(stock.data)
   const chart = echarts.init(document.getElementById(id))
   // 提取成交量和涨跌幅
@@ -133,9 +149,28 @@ function initChart(id, stock) {
   // 买点
   // qqqqqqqqqq
   const buy = data.values.map(v => v[6])
+  // console.log("日期输出：", data.date);
+
   // console.log(data.date);
   // console.log(selectedDate);
 
+  const currentDateSeries = stockCode.value.trim() === '' ? [{
+    name: '指定日期收盘价',
+    type: 'scatter',
+    coordinateSystem: 'cartesian2d',
+    symbol: 'circle',
+    symbolSize: 20,
+    data: [
+      {
+        name: '当前日期',
+        value: [data.date.indexOf(sv), data.values[data.date.indexOf(sv)][1]],
+      },
+    ],
+    itemStyle: {
+      color: '#e5e514',
+    }
+  }
+  ] : [];
 
   chart.setOption({
     title: { text: stock.name, left: '0' },
@@ -291,43 +326,79 @@ function initChart(id, stock) {
           color: '#915764'
         }
       },
-      {
-        name: '指定日期收盘价',
-        type: 'scatter',
-        coordinateSystem: 'cartesian2d',
-        symbol: 'circle',
-        symbolSize: 20,
-        data: [
-          {
-            name: '当前日期',
-            value: [data.date.indexOf(sv), data.values[data.date.indexOf(sv)][1]],
-          },
-        ],
-        itemStyle: {
-          color: '#e5e514',
-        }
-      },
+      ...currentDateSeries,
+      // {
+      //   name: '指定日期收盘价',
+      //   type: 'scatter',
+      //   coordinateSystem: 'cartesian2d',
+      //   symbol: 'circle',
+      //   symbolSize: 20,
+      //   data: [
+      //     {
+      //       name: '当前日期',
+      //       value: [data.date.indexOf(sv), data.values[data.date.indexOf(sv)][1]],
+      //     },
+      //   ],
+      //   itemStyle: {
+      //     color: '#e5e514',
+      //   }
+      // },
       // qqqqqqq
-      ...(buy.length > 0 && buy.some(point => point !== 0) ? [{
-        name: '买点',
-        type: 'scatter',
-        coordinateSystem: 'cartesian2d',
-        symbol: 'rect',
-        symbolSize: [15, 15],
-        data: buy.filter(point => point !== 0),  // 过滤掉值为0的买点
-        itemStyle: {
-          color: '#0e0a03',
-        },
-        label: {
-          show: true,
-          position: 'inside',
-          align: 'center',
-          verticalAlign: 'middle',
-          color: '#fff',
-          fontSize: 11,
-          formatter: 'B'
-        },
-      }] : [])
+      // ...(buy.length > 0 && buy.some(point => point !== 0) ? [{
+      //   name: '买点',
+      //   type: 'scatter',
+      //   coordinateSystem: 'cartesian2d',
+      //   symbol: 'rect',
+      //   symbolSize: [15, 15],
+      //   data: buy.filter(point => point !== 0),  // 过滤掉值为0的买点
+      //   itemStyle: {
+      //     color: '#0e0a03',
+      //   },
+      //   label: {
+      //     show: true,
+      //     position: 'inside',
+      //     align: 'center',
+      //     verticalAlign: 'middle',
+      //     color: '#fff',
+      //     fontSize: 11,
+      //     formatter: 'B'
+      //   },
+      // }] : [])
+      ...(buy.length > 0 && buy.some(point => point !== 0)
+        ? [{
+          name: '买点',
+          type: 'scatter',
+          coordinateSystem: 'cartesian2d',
+          symbol: 'rect',
+          symbolSize: [15, 15],
+          data: buy.map((point, idx) => {
+            // console.log("idx：", idx);
+            // console.log("data.date[idx]:", data.date[idx]);
+
+
+            if (point !== 0) {
+              return {
+                value: [data.date[idx], point],
+                symbolSize: 15,
+              }
+            }
+            return null;
+          }).filter(v => v !== null), // 过滤掉空值
+          itemStyle: {
+            color: '#0e0a03',
+          },
+          label: {
+            show: true,
+            position: 'inside',
+            align: 'center',
+            verticalAlign: 'middle',
+            color: '#fff',
+            fontSize: 11,
+            formatter: 'B'
+          },
+        }]
+        : [])
+
     ],
   });
   charts.value[id] = chart
@@ -435,18 +506,51 @@ const handleAnalysis = (key, keyPath) => {
 
 // qqqqqqqqqqqqqqq
 function fetchData() {
-  const params = new URLSearchParams({
-    date: formatDate(selectedDate.value),
-    page: currentPage.value,
+  const params = new URLSearchParams();
+  console.log("股票代码：", stockCode.value, "类型", typeof (stockCode.value));
+  console.log("replayindex：", replayIndex.value, "类型", typeof (replayIndex.value));
 
-  });
+  params.append('page', currentPage.value);
+  if (replayIndex.value === "1" || replayIndex.value === "2") {
+    console.log("涨停跌");
+
+    params.append('date', formatDate(selectedDate.value));
+  }
+
+  // if (replayIndex.value === "0" && stockCode.value.trim() !== "") {
+  if (replayIndex.value === "0") {
+    if (stockCode.value.trim() == "") {
+      params.append('date', formatDate(selectedDate.value));
+    }
+    params.append('ts_code', stockCode.value);
+    console.log("url正确");
+  }
+  // else if (replayIndex.value === "1" || replayIndex.value === "2") {
+  //   params.append('date', formatDate(selectedDate.value));
+  //   console.log("2");
+  // }
+  // else {
+  //   params.append('date', formatDate(selectedDate.value));
+  //   console.log("3");
+  // }
+  // const params = new URLSearchParams({
+  //   date: formatDate(selectedDate.value),
+  //   page: currentPage.value,
+
+  // });
   // console.log(date);
   // console.log(selectedDate.value);
-  let url = 'http://172.16.34.116:321/up_stop'; // 全部
+  let url = ''; // 全部
   if (replayIndex.value === '1') {
     url = 'http://172.16.34.116:321/up_stop'; // 涨停
   } else if (replayIndex.value === '2') {
     url = 'http://172.16.34.116:321/down_stop'; // 跌停
+  }
+  //  else if (stockCode.value) {
+  //   url = `http://172.16.34.116:321/query_stock`; // 股票代码
+  // }
+  else if (replayIndex.value === '0') {
+    url = `http://172.16.34.116:321/stock-data`; // 股票代码
   }
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
@@ -582,6 +686,7 @@ function formatDate(inputDate) {
 watch(selectedDate, (newDate) => {
   if (newDate) {
     // console.log(selectedDate);
+    stockCode.value = '';// 清空股票代码
     currentPage.value = 1; // 将当前页码重置为1
     fetchData();
   }
@@ -607,7 +712,8 @@ watch(stockData, () => {
       <div class="select-container">
         <div class="column">
           <span class="label">股票代码</span>
-          <el-input v-model="input" style="width: 150px" placeholder="输入股票代码" clearable />
+          <el-input v-model="stockCode" style="width: 150px" placeholder="输入股票代码" clearable
+            @keyup.enter="onStockCodeInput" />
         </div>
         <div class="column">
           <span class="label">日期</span>
