@@ -154,6 +154,23 @@ function initChart(id, stock) {
   // console.log(data.date);
   // console.log(selectedDate);
 
+  const currentDateSeries = stockCode.value.trim() === '' ? [{
+    name: '指定日期收盘价',
+    type: 'scatter',
+    coordinateSystem: 'cartesian2d',
+    symbol: 'circle',
+    symbolSize: 20,
+    data: [
+      {
+        name: '当前日期',
+        value: [data.date.indexOf(sv), data.values[data.date.indexOf(sv)][1]],
+      },
+    ],
+    itemStyle: {
+      color: '#e5e514',
+    }
+  }
+  ] : [];
 
   chart.setOption({
     title: { text: stock.name, left: '0' },
@@ -309,22 +326,23 @@ function initChart(id, stock) {
           color: '#915764'
         }
       },
-      {
-        name: '指定日期收盘价',
-        type: 'scatter',
-        coordinateSystem: 'cartesian2d',
-        symbol: 'circle',
-        symbolSize: 20,
-        data: [
-          {
-            name: '当前日期',
-            value: [data.date.indexOf(sv), data.values[data.date.indexOf(sv)][1]],
-          },
-        ],
-        itemStyle: {
-          color: '#e5e514',
-        }
-      },
+      ...currentDateSeries,
+      // {
+      //   name: '指定日期收盘价',
+      //   type: 'scatter',
+      //   coordinateSystem: 'cartesian2d',
+      //   symbol: 'circle',
+      //   symbolSize: 20,
+      //   data: [
+      //     {
+      //       name: '当前日期',
+      //       value: [data.date.indexOf(sv), data.values[data.date.indexOf(sv)][1]],
+      //     },
+      //   ],
+      //   itemStyle: {
+      //     color: '#e5e514',
+      //   }
+      // },
       // qqqqqqq
       // ...(buy.length > 0 && buy.some(point => point !== 0) ? [{
       //   name: '买点',
@@ -493,10 +511,18 @@ function fetchData() {
   console.log("replayindex：", replayIndex.value, "类型", typeof (replayIndex.value));
 
   params.append('page', currentPage.value);
-  params.append('date', formatDate(selectedDate.value));
+  if (replayIndex.value === "1" || replayIndex.value === "2") {
+    console.log("涨停跌");
+
+    params.append('date', formatDate(selectedDate.value));
+  }
+
   // if (replayIndex.value === "0" && stockCode.value.trim() !== "") {
   if (replayIndex.value === "0") {
-    params.append('stockCode', stockCode.value);
+    if (stockCode.value.trim() == "") {
+      params.append('date', formatDate(selectedDate.value));
+    }
+    params.append('ts_code', stockCode.value);
     console.log("url正确");
   }
   // else if (replayIndex.value === "1" || replayIndex.value === "2") {
@@ -524,7 +550,7 @@ function fetchData() {
   //   url = `http://172.16.34.116:321/query_stock`; // 股票代码
   // }
   else if (replayIndex.value === '0') {
-    url = `http://172.16.34.116:321/down_stop`; // 股票代码
+    url = `http://172.16.34.116:321/stock-data`; // 股票代码
   }
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
