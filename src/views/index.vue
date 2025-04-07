@@ -27,38 +27,38 @@ const selectedDate = ref('2025-03-26')
 // 策略选择
 const strategyIndex = ref('0')
 // 复盘条件选择
-const replayIndex = ref('0')
+const replayIndex = ref('1')
 // 大数据分析
 const analysisIndex = ref('0')
 // 查询买点输入框
 const stockCode = ref('')
 // 策略名称数组
 const strategies = {
-  '0': '五日调整',
-  '1': '打板策略',
-  '2': '日内回转',
-  '3': '波段交易',
-  '4': '基本面选股',
-  '5': '套利交易',
-  '6': '专家跟随',
-  '7': '财务估值',
+  '1': '五日调整',
+  '2': '打板策略',
+  '3': '日内回转',
+  '4': '波段交易',
+  '5': '基本面选股',
+  '6': '套利交易',
+  '7': '专家跟随',
+  '8': '财务估值',
 };
 // 技术指标数组
 const conditions = {
-  '0': '所有',
-  '1': '每日涨停',
-  '2': '每日跌停',
-  '3': '半年线',
-  '4': '年线',
-  '5': '强于大盘',
-  '6': '弱于大盘',
-  '7': '大盘反向',
+  '1': '所有',
+  '2': '每日涨停',
+  '3': '每日跌停',
+  '4': '半年线',
+  '5': '年线',
+  '6': '强于大盘',
+  '7': '弱于大盘',
+  '8': '大盘反向',
 };
 // 大数据分析数组
 const analysis = {
-  '0': '人气排名',
-  '1': '热门板块',
-  '2': '强势板块',
+  '1': '人气排名',
+  '2': '热门板块',
+  '3': '强势板块',
 }
 // 监听股票代码输入并按回车键进行查询
 const onStockCodeInput = (event) => {
@@ -89,16 +89,7 @@ function splitData(rawData) {
       rawData[i][2], // close
       rawData[i][5], // pct_chg
       rawData[i][6], // vol
-      // qqqqqqqqqqqqqq
       rawData[i][7], // buy
-      // rawData[i][1].toFixed(2), // open
-      // rawData[i][4].toFixed(2), // high
-      // rawData[i][3].toFixed(2), // low
-      // rawData[i][2].toFixed(2), // close
-      // rawData[i][5].toFixed(2), // pct_chg
-      // rawData[i][6].toFixed(2), // vol
-      // // 保留两位小数的买点
-      // rawData[i][7], // buy
     ])
   }
   return { date, values };
@@ -179,7 +170,7 @@ function initChart(id, stock) {
       trigger: 'axis', axisPointer: { type: 'cross' },
     },
     // 图例
-    legend: { data: ['日K', 'MA5', 'MA10', '成交量'] },
+    legend: { data: ['日K', 'MA5', 'MA10'] },
     axisPointer: { link: [{ xAxisIndex: 'all' }] },
     grid: [
       {
@@ -251,7 +242,7 @@ function initChart(id, stock) {
       {
         name: '日K',
         type: 'candlestick',
-        barWidth: '30%',
+        barWidth: '50%',
         data: data.values.map(v => v.slice(0, 4)), // [open, high, low, close]
         itemStyle: {
           color: upColor,
@@ -321,10 +312,21 @@ function initChart(id, stock) {
         xAxisIndex: 1,
         yAxisIndex: 1,
         data: volumes,
-        barWidth: '20%',
+        barWidth: '60%',
+        // itemStyle: {
+        //   color: '#915764'
+        // }
         itemStyle: {
-          color: '#915764'
-        }
+          color: function (params) {
+            const idx = params.dataIndex;
+            // 判断当前K线是涨还是跌
+            console.log('收盘，', data.values[idx][1], '开盘，', data.values[idx][0]);
+
+            return data.values[idx][1] >= data.values[idx][0]
+              ? upColor   // 收盘价 > 开盘价 → 红色
+              : downColor; // 收盘价 < 开盘价 → 绿色
+          }
+        },
       },
       ...currentDateSeries,
       // {
@@ -486,6 +488,9 @@ onBeforeUnmount(() => {
 const handleStrategy = (key, keyPath) => {
   // console.log(key, keyPath)
   strategyIndex.value = key;
+  replayIndex.value = '0';
+  stockCode.value = '000001.SZ';
+  selectedDate.value = '';
   currentPage.value = 1;
   fetchData();
 }
@@ -493,7 +498,12 @@ const handleStrategy = (key, keyPath) => {
 const handleReplay = (key, keyPath) => {
   // console.log(key, keyPath)
   replayIndex.value = key;
+  strategyIndex.value = '0';
+  stockCode.value = '';
+  selectedDate.value = '2025-03-26';
   currentPage.value = 1;
+  // console.log('这对吗');
+
   fetchData();
 }
 // 更新大数据分析
@@ -508,17 +518,18 @@ const handleAnalysis = (key, keyPath) => {
 function fetchData() {
   const params = new URLSearchParams();
   console.log("股票代码：", stockCode.value, "类型", typeof (stockCode.value));
-  console.log("replayindex：", replayIndex.value, "类型", typeof (replayIndex.value));
+  console.log("replayindex：", replayIndex.value, "类型", typeof (replayIndex.value), "strategyIndex:", strategyIndex.value);
 
-  params.append('page', currentPage.value);
-  if (replayIndex.value === "1" || replayIndex.value === "2") {
+
+  if (replayIndex.value === "1" || replayIndex.value === "2" || replayIndex.value === "3") {
     console.log("涨停跌");
-
-    params.append('date', formatDate(selectedDate.value));
+    params.append('pageNum', currentPage.value);
+    params.append('tradeDate', formatDate(selectedDate.value));
   }
 
   // if (replayIndex.value === "0" && stockCode.value.trim() !== "") {
-  if (replayIndex.value === "0") {
+  if (strategyIndex.value === "1") {
+    params.append('page', currentPage.value);
     if (stockCode.value.trim() == "") {
       params.append('date', formatDate(selectedDate.value));
     }
@@ -540,17 +551,21 @@ function fetchData() {
   // });
   // console.log(date);
   // console.log(selectedDate.value);
-  let url = ''; // 全部
-  if (replayIndex.value === '1') {
-    url = 'http://172.16.34.116:321/up_stop'; // 涨停
-  } else if (replayIndex.value === '2') {
-    url = 'http://172.16.34.116:321/down_stop'; // 跌停
+  let url = 'http://172.16.32.88:8080/api/stock/data'; // 全部
+  if (replayIndex.value === '2') {
+    // url = 'http://172.20.10.2:321/up_stop'; // 涨停
+    url = 'http://172.16.32.88:8080/api/stock/limit-up'; // 涨停
+  } else if (replayIndex.value === '3') {
+    url = 'http://172.16.32.88:8080/api/stock/limit-down'; // 跌停
   }
   //  else if (stockCode.value) {
   //   url = `http://172.16.34.116:321/query_stock`; // 股票代码
   // }
-  else if (replayIndex.value === '0') {
-    url = `http://172.16.34.116:321/stock-data`; // 股票代码
+  else if (replayIndex.value === '1') {
+    url = `http://172.16.32.88:8080/api/stock/data`; // 股票代码
+  }
+  else if (strategyIndex.value === '1') {
+    url = `http://172.16.32.93:321/stock-data`;
   }
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
@@ -707,7 +722,7 @@ watch(stockData, () => {
   <div id="app">
     <div class="top-bar">
       <div class="title-container">
-        <h1>{{ selectedCondition }}（{{ stockNumber }}）</h1>
+        <h1>{{ selectedCondition }}{{ selectedStrategy }}（{{ stockNumber }}）</h1>
       </div>
       <div class="select-container">
         <div class="column">
@@ -724,14 +739,14 @@ watch(stockData, () => {
             :ellipsis="false">
             <el-sub-menu index="replay">
               <template #title>技术指标</template>
-              <el-menu-item index="0">所有</el-menu-item>
-              <el-menu-item index="1">每日涨停</el-menu-item>
-              <el-menu-item index="2">每日跌停</el-menu-item>
-              <el-menu-item index="3">半年线</el-menu-item>
-              <el-menu-item index="4">年线</el-menu-item>
-              <el-menu-item index="5">强于大盘</el-menu-item>
-              <el-menu-item index="6">弱于大盘</el-menu-item>
-              <el-menu-item index="7">大盘反向</el-menu-item>
+              <el-menu-item index="1">所有</el-menu-item>
+              <el-menu-item index="2">每日涨停</el-menu-item>
+              <el-menu-item index="3">每日跌停</el-menu-item>
+              <el-menu-item index="4">半年线</el-menu-item>
+              <el-menu-item index="5">年线</el-menu-item>
+              <el-menu-item index="6">强于大盘</el-menu-item>
+              <el-menu-item index="7">弱于大盘</el-menu-item>
+              <el-menu-item index="8">大盘反向</el-menu-item>
             </el-sub-menu>
           </el-menu>
         </div>
@@ -740,9 +755,9 @@ watch(stockData, () => {
             :ellipsis="false">
             <el-sub-menu index="analysis">
               <template #title>大数据分析</template>
-              <el-menu-item index="0">人气排名</el-menu-item>
-              <el-menu-item index="1">热门板块</el-menu-item>
-              <el-menu-item index="2">强势板块</el-menu-item>
+              <el-menu-item index="1">人气排名</el-menu-item>
+              <el-menu-item index="2">热门板块</el-menu-item>
+              <el-menu-item index="3">强势板块</el-menu-item>
             </el-sub-menu>
           </el-menu>
         </div>
@@ -751,14 +766,14 @@ watch(stockData, () => {
             :ellipsis="false">
             <el-sub-menu index="strategy">
               <template #title>策略类型</template>
-              <el-menu-item index="0">🟢 五日调整</el-menu-item>
-              <el-menu-item index="1">🟡 打板策略</el-menu-item>
-              <el-menu-item index="2">🟡 日内回转</el-menu-item>
-              <el-menu-item index="3">🟡 波段交易</el-menu-item>
-              <el-menu-item index="4">🔴 基本面选股</el-menu-item>
-              <el-menu-item index="5">🔴 套利交易</el-menu-item>
-              <el-menu-item index="6">🔴 专家跟随</el-menu-item>
-              <el-menu-item index="7">🔴 财务估值</el-menu-item>
+              <el-menu-item index="1">🟢 五日调整</el-menu-item>
+              <el-menu-item index="2">🟡 打板策略</el-menu-item>
+              <el-menu-item index="3">🟡 日内回转</el-menu-item>
+              <el-menu-item index="4">🟡 波段交易</el-menu-item>
+              <el-menu-item index="5">🔴 基本面选股</el-menu-item>
+              <el-menu-item index="6">🔴 套利交易</el-menu-item>
+              <el-menu-item index="7">🔴 专家跟随</el-menu-item>
+              <el-menu-item index="8">🔴 财务估值</el-menu-item>
             </el-sub-menu>
           </el-menu>
         </div>
