@@ -551,18 +551,19 @@ function fetchData() {
   // });
   // console.log(date);
   // console.log(selectedDate.value);
-  let url = 'http://172.16.32.88:8080/api/stock/data'; // 全部
+  const baseUrl='http://172.16.32.88:8080/api/'
+  let url = baseUrl+'stock/data'; // 全部
   if (replayIndex.value === '2') {
     // url = 'http://172.20.10.2:321/up_stop'; // 涨停
-    url = 'http://172.16.32.88:8080/api/stock/limit-up'; // 涨停
+    url = baseUrl+'stock/limit-up'; // 涨停
   } else if (replayIndex.value === '3') {
-    url = 'http://172.16.32.88:8080/api/stock/limit-down'; // 跌停
+    url =baseUrl+'stock/limit-down'; // 跌停
   }
   //  else if (stockCode.value) {
   //   url = `http://172.16.34.116:321/query_stock`; // 股票代码
   // }
   else if (replayIndex.value === '1') {
-    url = `http://172.16.32.88:8080/api/stock/data`; // 股票代码
+    url = baseUrl+'stock/data'; // 股票代码
   }
   else if (strategyIndex.value === '1') {
     url = `http://172.16.32.93:321/stock-data`;
