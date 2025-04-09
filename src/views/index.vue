@@ -566,7 +566,7 @@ function fetchData() {
     url = baseUrl+'stock/data'; // 股票代码
   }
   else if (strategyIndex.value === '1') {
-    url = `http://172.16.32.93:321/stock-data`;
+    url = `https://172.16.32.93:321/stock-data`;
   }
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
