@@ -552,7 +552,7 @@ function fetchData() {
   // console.log(date);
   // console.log(selectedDate.value);
   // const baseUrl='http://172.16.32.88:8080/api/'
-  const baseUrl = 'https://ribfixrwocow.sealoshzh.site/api/'
+  const baseUrl = 'http://120.27.208.55:8080/api/'
   let url = baseUrl + 'stock/data'; // 全部
   if (replayIndex.value === '2') {
     // url = 'http://172.20.10.2:321/up_stop'; // 涨停
@@ -567,7 +567,7 @@ function fetchData() {
     url = baseUrl + 'stock/data'; // 股票代码
   }
   else if (strategyIndex.value === '1') {
-    url = `https://218.0.59.244:321/stock-data`;
+    url = `http://218.0.59.244:321/stock-data`;
   }
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
