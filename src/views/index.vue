@@ -2,6 +2,9 @@
 import { onMounted, ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
 
+import { useRouter } from 'vue-router';
+const router = useRouter();
+
 const stockNumber = ref(0)//总数
 const stockData = ref([])//数据
 // 颜色
@@ -596,6 +599,9 @@ function fetchData() {
       // const flattened = grid.flat().map(itemList => {
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
+        const startDate = new Date(itemList[0][1]); // 开始时间
+        const endDate = new Date(itemList[itemList.length - 1][1]); // 结束时间
+
         const kline = itemList.map(d => [
           d[1],  // 日期
           d[2],  // open
@@ -607,7 +613,7 @@ function fetchData() {
           d[9],  //买点
         ])
         // console.log(kline[8]);
-        return { name, data: kline }
+        return { name, data: kline, startDate, endDate }
       })
       stockData.value = flattened
       stockNumber.value = data.stock_count
@@ -718,6 +724,17 @@ watch(stockData, () => {
     })
   })
 })
+function showDetail(stock) {
+  // 传递股票代码、开始时间、结束时间到目标页面
+  router.push({
+    name: 'StockDetail',
+    params: {
+      stockCode: stock.name,
+      startDate: stock.startDate,
+      endDate: stock.endDate,
+    },
+  });
+}
 </script>
 
 <template>
@@ -784,7 +801,7 @@ watch(stockData, () => {
 
     <div class="grid-container">
       <div class="chart-wrapper" v-for="(stock, idx) in stockData" :key="stock.idx">
-        <div class="chart" :id="`chart${idx}`"></div>
+        <div class="chart" :id="`chart${idx}`" @click="showDetail(stock)"></div>
         <button class="fullscreen-btn" @click="fullscreen(idx)">全屏</button>
         <button class="fullscreen-btn" style="right: 80px" @click="exportChart(idx, stock.name)">导出</button>
       </div>

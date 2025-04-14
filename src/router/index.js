@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
+import StockDetail from '../pages/index.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,6 +8,12 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: () => import('@/views/index.vue'),
+    },
+    {
+      path: '/StockDetail',
+      name: 'StockDetail',
+      component: StockDetail,
+      props: true,
     },
     // {
     //   path: '/about',
