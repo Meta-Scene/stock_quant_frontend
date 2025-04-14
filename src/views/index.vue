@@ -3,6 +3,10 @@ import { onMounted, ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
 
 import { useRouter } from 'vue-router';
+import { formatDate } from '@/utils/dateUtils';
+import { splitData } from '@/utils/splitData';
+import { MA } from '@/utils/MA';
+
 const router = useRouter();
 
 const stockNumber = ref(0)//总数
@@ -14,8 +18,6 @@ const downColor = '#00da3c';
 const downBorderColor = '#008F28';
 // 图表实例
 const charts = ref({});
-// 引用图表容器
-const chartContainer = ref(null);
 // 每页大小
 const pageSize = 9;
 // 总页数
@@ -25,7 +27,7 @@ const totalPage = computed(() => {
 // 当前页数
 const currentPage = ref(1)
 // 日期选择
-const selectedDate = ref('2025-03-26')
+const selectedDate = ref('');
 // const selectedDate = ref('')
 // 策略选择
 const strategyIndex = ref('0')
@@ -80,52 +82,6 @@ const selectedAnalysis = computed(() => {
   return analysis[analysisIndex.value] || '';
 });
 
-// 提取k线图数据,传入某支股票的grid_data
-function splitData(rawData) {
-  const date = [], values = [];
-  for (let i = 0; i < rawData.length; i++) {
-    date.push(rawData[i][0]);
-    values.push([
-      rawData[i][1], // open
-      rawData[i][4], // high
-      rawData[i][3], // low
-      rawData[i][2], // close
-      rawData[i][5], // pct_chg
-      rawData[i][6], // vol
-      rawData[i][7], // buy
-    ])
-  }
-  return { date, values };
-  /*
-  values[i][0-3] 开盘 最高 最低 收盘
-  values[i][4] 涨跌幅
-  values[i][5] 成交量
-  */
-}
-
-// 计算均线
-function MA(cnt, data) {
-  const res = [];
-  const values = data.values;
-  for (let i = 0; i < values.length; i++) {
-    // 不足cnt天跳过
-    if (i < cnt - 1) {
-      res.push('-')
-      continue
-    }
-    // 每cnt天收盘价总和
-    let sum = 0
-    for (let j = 0; j < cnt; j++) {
-      // d[5]收盘价
-      sum += values[i - j][3]
-    }
-    // console.log(sum / cnt);
-    const avg = (sum / cnt).toFixed(2);
-    res.push(Number(avg));
-  }
-  return res
-}
-
 // 单图表初始化
 function initChart(id, stock) {
   if (charts.value[id]) {
@@ -167,7 +123,7 @@ function initChart(id, stock) {
   ] : [];
 
   chart.setOption({
-    title: { text: stock.name, left: '0' },
+    title: { text: stock.name, left: '0', triggerEvent: true },
     // 交叉线
     tooltip: {
       trigger: 'axis', axisPointer: { type: 'cross' },
@@ -323,7 +279,7 @@ function initChart(id, stock) {
           color: function (params) {
             const idx = params.dataIndex;
             // 判断当前K线是涨还是跌
-            console.log('收盘，', data.values[idx][1], '开盘，', data.values[idx][0]);
+            // console.log('收盘，', data.values[idx][1], '开盘，', data.values[idx][0]);
 
             return data.values[idx][1] >= data.values[idx][0]
               ? upColor   // 收盘价 > 开盘价 → 红色
@@ -332,43 +288,6 @@ function initChart(id, stock) {
         },
       },
       ...currentDateSeries,
-      // {
-      //   name: '指定日期收盘价',
-      //   type: 'scatter',
-      //   coordinateSystem: 'cartesian2d',
-      //   symbol: 'circle',
-      //   symbolSize: 20,
-      //   data: [
-      //     {
-      //       name: '当前日期',
-      //       value: [data.date.indexOf(sv), data.values[data.date.indexOf(sv)][1]],
-      //     },
-      //   ],
-      //   itemStyle: {
-      //     color: '#e5e514',
-      //   }
-      // },
-      // qqqqqqq
-      // ...(buy.length > 0 && buy.some(point => point !== 0) ? [{
-      //   name: '买点',
-      //   type: 'scatter',
-      //   coordinateSystem: 'cartesian2d',
-      //   symbol: 'rect',
-      //   symbolSize: [15, 15],
-      //   data: buy.filter(point => point !== 0),  // 过滤掉值为0的买点
-      //   itemStyle: {
-      //     color: '#0e0a03',
-      //   },
-      //   label: {
-      //     show: true,
-      //     position: 'inside',
-      //     align: 'center',
-      //     verticalAlign: 'middle',
-      //     color: '#fff',
-      //     fontSize: 11,
-      //     formatter: 'B'
-      //   },
-      // }] : [])
       ...(buy.length > 0 && buy.some(point => point !== 0)
         ? [{
           name: '买点',
@@ -379,8 +298,6 @@ function initChart(id, stock) {
           data: buy.map((point, idx) => {
             // console.log("idx：", idx);
             // console.log("data.date[idx]:", data.date[idx]);
-
-
             if (point !== 0) {
               return {
                 value: [data.date[idx], point],
@@ -406,6 +323,15 @@ function initChart(id, stock) {
 
     ],
   });
+  // 为图表的 title 区域绑定点击事件
+  chart.on('click', function (params) {
+    if (params.componentType === 'title') {
+      // 如果点击的是 title 区域，执行 showDetail 函数
+      showDetail(stock);
+    }
+  }
+  );
+
   charts.value[id] = chart
 }
 
@@ -480,6 +406,7 @@ function gotoPage() {
 
 onMounted(() => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
+  redictToNewDay();
   fetchData();
 })
 
@@ -492,8 +419,9 @@ const handleStrategy = (key, keyPath) => {
   // console.log(key, keyPath)
   strategyIndex.value = key;
   replayIndex.value = '0';
-  stockCode.value = '000001.SZ';
-  selectedDate.value = '';
+  stockCode.value = '';
+  // selectedDate.value = '';
+  redictToNewDay();
   currentPage.value = 1;
   fetchData();
 }
@@ -516,8 +444,25 @@ const handleAnalysis = (key, keyPath) => {
   currentPage.value = 1;
   fetchData();
 }
+function redictToNewDay() {
 
-// qqqqqqqqqqqqqqq
+  // 获取当前时间
+  const currentDate = new Date();
+
+  // 获取当前时间的小时
+  const currentHour = currentDate.getHours();
+
+  // 如果当前时间是下午4点前
+  if (currentHour < 16) {
+    // 设置为昨天的日期
+    const yesterday = new Date(currentDate);
+    yesterday.setDate(currentDate.getDate() - 1);  // 昨天
+    selectedDate.value = formatDate(yesterday);    // 格式化并设置日期
+  } else {
+    // 设置为今天的日期
+    selectedDate.value = formatDate(currentDate);  // 格式化并设置日期
+  }
+}
 function fetchData() {
   const params = new URLSearchParams();
   console.log("股票代码：", stockCode.value, "类型", typeof (stockCode.value));
@@ -539,50 +484,25 @@ function fetchData() {
     params.append('ts_code', stockCode.value);
     console.log("url正确");
   }
-  // else if (replayIndex.value === "1" || replayIndex.value === "2") {
-  //   params.append('date', formatDate(selectedDate.value));
-  //   console.log("2");
-  // }
-  // else {
-  //   params.append('date', formatDate(selectedDate.value));
-  //   console.log("3");
-  // }
-  // const params = new URLSearchParams({
-  //   date: formatDate(selectedDate.value),
-  //   page: currentPage.value,
-
-  // });
-  // console.log(date);
-  // console.log(selectedDate.value);
-  // const baseUrl='http://172.16.32.88:8080/api/'
   const baseUrl = 'http://120.27.208.55:8080/api/'
   let url = baseUrl + 'stock/data'; // 全部
   if (replayIndex.value === '2') {
-    // url = 'http://172.20.10.2:321/up_stop'; // 涨停
     url = baseUrl + 'stock/limit-up'; // 涨停
-  } else if (replayIndex.value === '3') {
+  }
+  else if (replayIndex.value === '3') {
     url = baseUrl + 'stock/limit-down'; // 跌停
   }
-  //  else if (stockCode.value) {
-  //   url = `http://172.16.34.116:321/query_stock`; // 股票代码
-  // }
   else if (replayIndex.value === '1') {
-    url = baseUrl + 'stock/data'; // 股票代码
+    url = baseUrl + 'stock/data'; // 全部
   }
   else if (strategyIndex.value === '1') {
-    url = `http://218.0.59.244:321/stock-data`;
+    url = `http://120.27.208.55:10027/stock-data`; //五日调整
   }
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
-    // body: JSON.stringify({
-    //   // strategy: selectedStrategy,
-    //   // strategyIndex: key,
-    //   date: selectedDate.value,
-    //   page: currentPage.value,
-    // }),
   })
     .then(response => {
       if (!response.ok) {
@@ -622,89 +542,7 @@ function fetchData() {
       console.error('数据获取失败:', error);
     });
 }
-// 模拟数据
-// function fetchData() {
-//   const mockData = {
-//     "column_names": [
-//       "ts_code", "trade_date", "open", "high",
-//       "low", "close", "pre_close", "pct_chg", "vol"],
 
-//     "date": "2024-01-12",
-
-//     "grid_data": [
-//       [
-//         [
-//           ["430017.BJ", "2024-01-11", 14.32, 14.93, 14.03, 14.23, 13.92, 2.23, 30076.77, 14.03],
-//           ["430017.BJ", "2024-01-12", 13.96, 14.14, 13.27, 13.27, 14.23, -6.75, 35741.96, 0],
-//           ["430017.BJ", "2024-01-15", 13.23, 13.41, 12.72, 12.75, 13.27, -3.92, 23413.75, 13.27]],
-//         [
-//           ["430047.BJ", "2024-01-11", 17.25, 18.5, 17.25, 18.12, 17.08, 6.09, 30244.24, 0],
-//           ["430047.BJ", "2024-01-12", 17.94, 18.27, 17.52, 17.66, 18.12, -2.54, 18176.61, 0],
-//           ["430047.BJ", "2024-01-15", 17.52, 18.15, 17.52, 17.84, 17.66, 1.02, 15487.43, 0]],
-//         [
-//           ["430090.BJ", "2024-01-11", 5.01, 5.3, 5.01, 5.12, 5.04, 1.59, 113921.8, 13.27],
-//           ["430090.BJ", "2024-01-12", 5.1, 5.12, 4.39, 4.41, 5.12, -13.87, 195351.01, 13.27],
-//           ["430090.BJ", "2024-01-15", 4.36, 4.44, 4.06, 4.07, 4.41, -7.71, 136154.68, 0]]],
-//       [
-//         [
-//           ["430139.BJ", "2024-01-11", 13.2, 13.6, 13.17, 13.47, 13.19, 2.12, 23430.29, 13.27],
-//           ["430139.BJ", "2024-01-12", 13.35, 13.57, 12.53, 12.55, 13.47, -6.83, 32109.02, 13.27],
-//           ["430139.BJ", "2024-01-15", 12.51, 13.16, 11.95, 12.55, 12.55, 0.0, 34289.83, 13.27]],
-//         [
-//           ["430198.BJ", "2024-01-11", 8.96, 9.3, 8.84, 9.05, 8.89, 1.8, 46919.64, 13.27],
-//           ["430198.BJ", "2024-01-12", 9.06, 9.07, 7.87, 7.91, 9.05, -12.6, 71167.1, 13.27],
-//           ["430198.BJ", "2024-01-15", 7.98, 8.0, 7.44, 7.5, 7.91, -5.18, 54171.58, 13.27]],
-//         [
-//           ["430300.BJ", "2024-01-11", 12.19, 12.68, 12.19, 12.3, 12.33, -0.24, 22148.13, 13.27],
-//           ["430300.BJ", "2024-01-12", 12.11, 12.35, 10.45, 10.45, 12.3, -15.04, 40485.19, 13.27],
-//           ["430300.BJ", "2024-01-15", 10.45, 10.9, 10.0, 10.34, 10.45, -1.05, 26087.01, 13.27]]],
-//       [
-//         [
-//           ["430418.BJ", "2024-01-11", 16.23, 16.56, 15.81, 16.25, 16.42, -1.04, 16843.22, 13.27],
-//           ["430418.BJ", "2024-01-12", 16.11, 16.34, 14.53, 14.55, 16.25, -10.46, 27629.35, 13.27],
-//           ["430418.BJ", "2024-01-15", 14.34, 15.09, 13.92, 14.55, 14.55, 0.0, 23918.28, 13.27]],
-//         [
-//           ["430425.BJ", "2024-01-11", 16.88, 16.97, 16.42, 16.81, 16.81, 0.0, 16275.92, 13.27],
-//           ["430425.BJ", "2024-01-12", 16.91, 16.91, 14.26, 14.27, 16.81, -15.11, 30662.16, 13.27],
-//           ["430425.BJ", "2024-01-15", 14.07, 14.91, 13.83, 14.08, 14.27, -1.33, 16026.4, 13.27]],
-//         [
-//           ["430476.BJ", "2024-01-11", 12.93, 13.24, 12.84, 13.18, 12.93, 1.93, 6864.85, 13.27],
-//           ["430476.BJ", "2024-01-12", 13.25, 13.71, 12.39, 12.45, 13.18, -5.54, 11543.37, 13.27],
-//           ["430476.BJ", "2024-01-15", 12.47, 12.54, 11.81, 11.96, 12.45, -3.94, 10675.44, 13.27]]]],
-//     "page": 1,
-//     "stock_count": 9,
-//     "total_pages": 27
-//   }
-
-//   const grid = mockData.grid_data || []
-//   const flattened = grid.flat().map(itemList => {
-//     const name = itemList[0][0] // 股票代码
-//     const kline = itemList.map(d => [
-//       d[1],  // 日期
-//       d[2],  // open
-//       d[3],  // high
-//       d[4],  // low
-//       d[5],  // close
-//       d[7],  // pct_chg
-//       d[8],  // vol
-//       d[9],  // buy
-
-//     ])
-//     return { name, data: kline }
-//   })
-
-//   stockData.value = flattened
-//   stockNumber.value = flattened.length
-// }
-
-function formatDate(inputDate) {
-  const date = new Date(inputDate);
-  // YYYY-MM-DD
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 watch(selectedDate, (newDate) => {
   if (newDate) {
@@ -725,13 +563,15 @@ watch(stockData, () => {
   })
 })
 function showDetail(stock) {
-  // 传递股票代码、开始时间、结束时间到目标页面
+  console.log("stockCode: ", stock.name, "startDate: ", stock.startDate, "endDate: ", stock.endDate);
+
+  // 传递股票代码到目标页面
   router.push({
     name: 'StockDetail',
-    params: {
+    query: {
       stockCode: stock.name,
-      startDate: stock.startDate,
-      endDate: stock.endDate,
+      // startDate: formatDate(stock.startDate),
+      // endDate: formatDate(stock.endDate),
     },
   });
 }
@@ -801,7 +641,8 @@ function showDetail(stock) {
 
     <div class="grid-container">
       <div class="chart-wrapper" v-for="(stock, idx) in stockData" :key="stock.idx">
-        <div class="chart" :id="`chart${idx}`" @click="showDetail(stock)"></div>
+        <!-- <div class="chart" :id="`chart${idx}`" @click="showDetail(stock)"></div> -->
+        <div class="chart" :id="`chart${idx}`"></div>
         <button class="fullscreen-btn" @click="fullscreen(idx)">全屏</button>
         <button class="fullscreen-btn" style="right: 80px" @click="exportChart(idx, stock.name)">导出</button>
       </div>
