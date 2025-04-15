@@ -29,15 +29,17 @@ let gotoInput;//页码跳转框
 
 /* 点击股票代码跳转到对应顶/底分型数据显示 */
 function showDetail(stock) {
-  console.log("stockCode: ", stock.name);
-  window.open(
-    router.resolve({
-      name: 'StockFmark',
-      query: {
-        stockCode: stock.name,
-      },
-    }).href, '_blank'
-  );
+  // console.log("stockCode: ", stock.name);
+  if(strategyIndex.value!='0'){
+    window.open(
+      router.resolve({
+        name: 'StockFmark',
+        query: {
+          stockCode: stock.name,
+        },
+      }).href, '_blank'
+    );
+  }
 }
 /* 监听股票代码按回车键进行查询 */
 const onStockCodeInput = () => {
