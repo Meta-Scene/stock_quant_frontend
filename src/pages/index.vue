@@ -1,16 +1,25 @@
 <script setup>
+import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+// import useStockStore from '@/stores/stockStore';
+import * as echarts from 'echarts'
+import { upColor, upBorderColor, downColor, downBorderColor } from '@/stores/define'
+import { MA } from '@/utils/MA';
+
 defineProps({ name: 'StockDetail' });
 const route = useRoute();
 const ts_code = route.query.stockCode;
-// const startDate = route.query.startDate;
-// const endDate = route.query.endDate;
 console.log(`股票代码: ${ts_code}`);
+
+// const store = useStockStore();
+// const {
+//   charts,
+// } = storeToRefs(store);
 
 function fetchDetail() {
   const params = new URLSearchParams();
   params.append('ts_code', ts_code);
-  const url = 'http://120.27.208.55:8080/api/'
+  const url = 'http://172.16.32.93:321/stock_fmark'
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
     headers: {
@@ -25,16 +34,9 @@ function fetchDetail() {
     })
     .then(data => {
       console.log('成功:', data);
-      const grid = data.grid_data || [];
-      if (grid.length === 0) {
-        currentPage.value = 0;
-      }
-      // const flattened = grid.flat().map(itemList => {
+      const grid = data.data || [];
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
-        const startDate = new Date(itemList[0][1]); // 开始时间
-        const endDate = new Date(itemList[itemList.length - 1][1]); // 结束时间
-
         const kline = itemList.map(d => [
           d[1],  // 日期
           d[2],  // open
@@ -44,57 +46,62 @@ function fetchDetail() {
           d[7],  // 涨跌幅
           d[8],  // 成交量
           d[9],  // 买点
+          d[10], // point
         ])
-        // console.log(kline[8]);
-        return { name, data: kline, startDate, endDate }
+        return { name, data: kline }
       })
-      stockData.value = flattened
-      stockNumber.value = data.stock_count
+
+      flattened.forEach((stock) => {
+        // console.log("idx",idx);
+        // console.log("stock",stock);
+
+        initChart(stock)
+      })
+      // let sd = flattened;
+      // initChart(sd)
     })
     .catch(error => {
       console.error('数据获取失败:', error);
     });
 }
-function initChart(stock) {
-  const chartContainer = document.getElementById('chart');  // 直接使用一个固定的 id
-  if (charts.value['chart']) {
-    charts.value['chart'].dispose();
+function splitData(rawData) {
+  const date = [], values = [];
+  for (let i = 0; i < rawData.length; i++) {
+    date.push(rawData[i][0]);
+    values.push([
+      rawData[i][1], // open
+      rawData[i][4], // high
+      rawData[i][3], // low
+      rawData[i][2], // close
+      rawData[i][5], // pct_chg
+      rawData[i][6], // vol
+      rawData[i][7], // buy
+      rawData[i][8], // fmark
+    ])
   }
+  return { date, values };
+  /*
+  values[i][0-3] 开盘 最高 最低 收盘
+  values[i][4] 涨跌幅
+  values[i][5] 成交量
+  */
+}
+
+function initChart(stock) {
+  const chartContainer = document.getElementById('chart1');  // 直接使用一个固定的 id
+  // if (charts.value['chart']) {
+  //   charts.value['chart'].dispose();
+  // }
   const data = splitData(stock.data)
   const chart = echarts.init(chartContainer);
   // 提取成交量和涨跌幅
   const pctChg = data.values.map(v => v[4])
   const volumes = data.values.map(v => v[5])
-  const sv = formatDate(selectedDate.value);
-  // const sv = selectedDate.value;
-  // console.log(1111);
-  // console.log(selectedDate.value);
-  // 买点
-  // qqqqqqqqqq
   const buy = data.values.map(v => v[6])
-  // console.log("日期输出：", data.date);
-
-  // console.log(data.date);
-  // console.log(selectedDate);
-
-  const currentDateSeries = stockCode.value.trim() === '' ? [{
-    name: '指定日期收盘价',
-    type: 'scatter',
-    coordinateSystem: 'cartesian2d',
-    symbol: 'circle',
-    symbolSize: 20,
-    data: [
-      {
-        name: '当前日期',
-        value: [data.date.indexOf(sv), data.values[data.date.indexOf(sv)][1]],
-      },
-    ],
-    itemStyle: {
-      color: '#e5e514',
-    }
-  }
-  ] : [];
-
+  const fmark = data.values.map(v => v[7])
+  const filteredFmark = fmark
+    .map((value, index) => (value !== 0 ? [data.date[index], value] : null))
+    .filter(v => v !== null); // 过滤掉 null 值
   chart.setOption({
     title: { text: stock.name, left: '0', triggerEvent: true },
     // 交叉线
@@ -102,7 +109,7 @@ function initChart(stock) {
       trigger: 'axis', axisPointer: { type: 'cross' },
     },
     // 图例
-    legend: { data: ['日K', 'MA5', 'MA10'] },
+    legend: { data: ['日K', 'MA5', 'MA10', 'MA120', 'MA250', 'Fmark'] },
     axisPointer: { link: [{ xAxisIndex: 'all' }] },
     grid: [
       {
@@ -209,6 +216,22 @@ function initChart(stock) {
         yAxisIndex: 2,
       },
       {
+        name: 'Fmark',
+        type: 'line',
+        data: filteredFmark,
+        // data: fmark,
+        smooth: false,
+        lineStyle: {
+          color: '#0000ff',
+          width: 1.5
+        },
+        symbol: 'circle',
+        symbolSize: 5,
+        itemStyle: {
+          color: '#0000ff',
+        },
+      },
+      {
         name: 'MA5',
         type: 'line',
         data: MA(5, data),
@@ -239,15 +262,42 @@ function initChart(stock) {
         },
       },
       {
+        name: 'MA120',
+        type: 'line',
+        data: MA(120, data),
+        smooth: true,
+        lineStyle: {
+          color: '#ff77ff',
+          width: 1.5,
+        },
+        symbol: 'circle',
+        symbolSize: 5,
+        itemStyle: {
+          color: '#ff77ff',
+        },
+      },
+      {
+        name: 'MA250',
+        type: 'line',
+        data: MA(250, data),
+        smooth: true,
+        lineStyle: {
+          color: '#581845',
+          width: 1.5,
+        },
+        symbol: 'circle',
+        symbolSize: 5,
+        itemStyle: {
+          color: '#581845',
+        },
+      },
+      {
         name: '成交量',
         type: 'bar',
         xAxisIndex: 1,
         yAxisIndex: 1,
         data: volumes,
         barWidth: '60%',
-        // itemStyle: {
-        //   color: '#915764'
-        // }
         itemStyle: {
           color: function (params) {
             const idx = params.dataIndex;
@@ -260,7 +310,7 @@ function initChart(stock) {
           }
         },
       },
-      ...currentDateSeries,
+      // ...currentDateSeries,
       ...(buy.length > 0 && buy.some(point => point !== 0)
         ? [{
           name: '买点',
@@ -296,16 +346,82 @@ function initChart(stock) {
 
     ],
   });
-  charts.value['chart'] = chart
+  // charts.value['chart'] = chart
 }
-
+onMounted(() => {
+  fetchDetail();
+})
 </script>
 
 <template>
   <div class="chart-container">
     <div class="chart-wrapper">
-      <div class="chart" id="chart"></div>
+      <div class="chart" id="chart1"></div>
       <button class="export-btn" @click="exportChart">导出</button>
     </div>
   </div>
 </template>
+<style scoped>
+/* 全局 */
+/* html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: #f4f6f8;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #333;
+} */
+
+/* 图表 */
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chart-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chart-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.chart {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+
+}
+
+
+.chart-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999;
+  background-color: #fff;
+}
+
+.chart-wrapper .chart {
+  height: 100vh !important;
+}
+
+.chart-wrapper {
+  font-size: 14px;
+  padding: 6px 10px;
+}
+</style>

@@ -1,16 +1,16 @@
 <script setup>
-import { onMounted,computed,watch,nextTick,onBeforeUnmount} from 'vue'
+import { onMounted, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
 import useStockStore from '@/stores/stockStore';
 import { formatDate } from '@/utils/dateUtils';
 import { splitData } from '@/utils/splitData';
 import { MA } from '@/utils/MA';
 import { storeToRefs } from 'pinia';
-import { pageSize,upColor,upBorderColor,downColor,downBorderColor,strategies,conditions,analysis } from '@/stores/define'
+import { pageSize, upColor, upBorderColor, downColor, downBorderColor, strategies, conditions, analysis } from '@/stores/define'
 import { useRouter } from 'vue-router';
 const router = useRouter();
 const totalPage = computed(() => {
-    return Math.ceil(stockNumber.value / pageSize)
+  return Math.ceil(stockNumber.value / pageSize)
 })
 let gotoInput;
 const store = useStockStore();
@@ -24,17 +24,25 @@ const {
   replayIndex,
   analysisIndex,
   stockCode,
-  }=storeToRefs(store);
+} = storeToRefs(store);
 // 点击股票代码跳转到对应顶/底分型数据显示
 function showDetail(stock) {
-  console.log("stockCode: ", stock.name, "startDate: ", stock.startDate, "endDate: ", stock.endDate);
+  console.log("stockCode: ", stock.name);
+  window.open(
+    router.resolve({
+      name: 'StockDetail',
+      query: {
+        stockCode: stock.name,
+      },
+    }).href, '_blank'
+  );
   // 传递股票代码到目标页面
-  router.push({
-    name: 'StockDetail',
-    query: {
-      stockCode: stock.name,
-    },
-  });
+  // router.push({
+  //   name: 'StockDetail',
+  //   query: {
+  //     stockCode: stock.name,
+  //   },
+  // });
 }
 // 监听股票代码输入并按回车键进行查询
 const onStockCodeInput = (event) => {
@@ -287,7 +295,7 @@ function initChart(id, stock) {
             formatter: 'B'
           },
         }]
-      : [])
+        : [])
     ],
   });
   // 为图表的 title 区域绑定点击事件
@@ -372,7 +380,7 @@ function gotoPage() {
 
 onMounted(() => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
-  redictToNewDay();
+  // redictToNewDay();
   fetchData();
 })
 
@@ -397,7 +405,7 @@ const handleReplay = (key, keyPath) => {
   replayIndex.value = key;
   strategyIndex.value = '0';
   stockCode.value = '';
-  selectedDate.value = '2025-03-26';
+  selectedDate.value = '2025-03-31';
   currentPage.value = 1;
   fetchData();
 }
@@ -434,7 +442,13 @@ function fetchData() {
   if (replayIndex.value === "1" || replayIndex.value === "2" || replayIndex.value === "3") {
     console.log("涨停跌");
     params.append('pageNum', currentPage.value);
-    params.append('tradeDate', formatDate(selectedDate.value));
+    if (selectedDate.value) {
+      params.append('tradeDate', formatDate(selectedDate.value));
+      // selectedDate.value = formatDate(selectedDate.value)
+    } else {
+      selectedDate.value = "2025-3-31";
+    }
+    // params.append('tradeDate', selectedDate.value);
   }
 
   // if (replayIndex.value === "0" && stockCode.value.trim() !== "") {
@@ -458,7 +472,7 @@ function fetchData() {
     url = baseUrl + 'stock/data'; // 全部
   }
   else if (strategyIndex.value === '1') {
-    url = `http://120.27.208.55:10027/stock-data`; //五日调整
+    url = 'http://172.16.32.93:321/stock_bay'; //五日调整
   }
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
@@ -481,8 +495,8 @@ function fetchData() {
       // const flattened = grid.flat().map(itemList => {
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
-        const startDate = new Date(itemList[0][1]); // 开始时间
-        const endDate = new Date(itemList[itemList.length - 1][1]); // 结束时间
+        // const startDate = new Date(itemList[0][1]); // 开始时间
+        // const endDate = new Date(itemList[itemList.length - 1][1]); // 结束时间
 
         const kline = itemList.map(d => [
           d[1],  // 日期
@@ -495,7 +509,7 @@ function fetchData() {
           d[9],  // 买点
         ])
         // console.log(kline[8]);
-        return { name, data: kline, startDate, endDate }
+        return { name, data: kline }
       })
       stockData.value = flattened
       stockNumber.value = data.stock_count

@@ -12,8 +12,8 @@ const router = createRouter({
     {
       path: '/StockDetail',
       name: 'StockDetail',
-      component: StockDetail,
-      props: true,
+      component: ()=>import('@/pages/index.vue'),
+      props: route => ({ stockCode: route.query.stockCode }),
     },
   ],
 })
