@@ -1,20 +1,18 @@
 <script setup>
 import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-// import useStockStore from '@/stores/stockStore';
 import * as echarts from 'echarts'
 import { upColor, upBorderColor, downColor, downBorderColor } from '@/stores/define'
 import { MA } from '@/utils/MA';
 
-defineProps({ name: 'StockDetail' });
+defineProps({ name: 'StockFmark' });
 const route = useRoute();
 const ts_code = route.query.stockCode;
-console.log(`股票代码: ${ts_code}`);
+// console.log(`股票代码: ${ts_code}`);
 
-// const store = useStockStore();
-// const {
-//   charts,
-// } = storeToRefs(store);
+onMounted(() => {
+  fetchDetail();
+})
 
 function fetchDetail() {
   const params = new URLSearchParams();
@@ -46,7 +44,7 @@ function fetchDetail() {
           d[7],  // 涨跌幅
           d[8],  // 成交量
           d[9],  // 买点
-          d[10], // point
+          d[10], // fmark
         ])
         return { name, data: kline }
       })
@@ -54,7 +52,6 @@ function fetchDetail() {
       flattened.forEach((stock) => {
         // console.log("idx",idx);
         // console.log("stock",stock);
-
         initChart(stock)
       })
       // let sd = flattened;
@@ -64,6 +61,7 @@ function fetchDetail() {
       console.error('数据获取失败:', error);
     });
 }
+
 function splitData(rawData) {
   const date = [], values = [];
   for (let i = 0; i < rawData.length; i++) {
@@ -84,24 +82,22 @@ function splitData(rawData) {
   values[i][0-3] 开盘 最高 最低 收盘
   values[i][4] 涨跌幅
   values[i][5] 成交量
+  values[i][6] 买点
+  values[i][7] 顶底分型
   */
 }
 
 function initChart(stock) {
-  const chartContainer = document.getElementById('chart1');  // 直接使用一个固定的 id
-  // if (charts.value['chart']) {
-  //   charts.value['chart'].dispose();
-  // }
+  const chartContainer = document.getElementById('chart1');
   const data = splitData(stock.data)
   const chart = echarts.init(chartContainer);
-  // 提取成交量和涨跌幅
   const pctChg = data.values.map(v => v[4])
   const volumes = data.values.map(v => v[5])
   const buy = data.values.map(v => v[6])
   const fmark = data.values.map(v => v[7])
   const filteredFmark = fmark
     .map((value, index) => (value !== 0 ? [data.date[index], value] : null))
-    .filter(v => v !== null); // 过滤掉 null 值
+    .filter(v => v !== null);
   chart.setOption({
     title: { text: stock.name, left: '0', triggerEvent: true },
     // 交叉线
@@ -301,16 +297,14 @@ function initChart(stock) {
         itemStyle: {
           color: function (params) {
             const idx = params.dataIndex;
-            // 判断当前K线是涨还是跌
+            // 判断当前K线涨跌
             // console.log('收盘，', data.values[idx][1], '开盘，', data.values[idx][0]);
-
             return data.values[idx][1] >= data.values[idx][0]
-              ? upColor   // 收盘价 > 开盘价 → 红色
-              : downColor; // 收盘价 < 开盘价 → 绿色
+              ? upColor   // 收>开 红
+              : downColor; // 收<开 绿
           }
         },
       },
-      // ...currentDateSeries,
       ...(buy.length > 0 && buy.some(point => point !== 0)
         ? [{
           name: '买点',
@@ -342,15 +336,10 @@ function initChart(stock) {
             formatter: 'B'
           },
         }]
-        : [])
-
+      : [])
     ],
   });
-  // charts.value['chart'] = chart
 }
-onMounted(() => {
-  fetchDetail();
-})
 </script>
 
 <template>
@@ -361,18 +350,8 @@ onMounted(() => {
     </div>
   </div>
 </template>
-<style scoped>
-/* 全局 */
-/* html,
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background-color: #f4f6f8;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  color: #333;
-} */
 
+<style scoped>
 /* 图表 */
 #app {
   height: 100%;
@@ -404,7 +383,6 @@ body {
   border-radius: 8px;
 
 }
-
 
 .chart-wrapper {
   position: fixed;

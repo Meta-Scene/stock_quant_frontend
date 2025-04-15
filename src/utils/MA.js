@@ -1,4 +1,4 @@
-// 计算均线
+/* 计算均线 */
 export function MA(cnt, data) {
   const res = [];
   const values = data.values;

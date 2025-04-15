@@ -1,6 +1,4 @@
-import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { pageSize } from './define'
 
 export default defineStore('stock', {
   state:() => {

@@ -1,18 +1,15 @@
 <script setup>
-import { onMounted, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
+import { onMounted, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import useStockStore from '@/stores/stockStore';
+import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 import { formatDate } from '@/utils/dateUtils';
 import { splitData } from '@/utils/splitData';
 import { MA } from '@/utils/MA';
-import { storeToRefs } from 'pinia';
 import { pageSize, upColor, upBorderColor, downColor, downBorderColor, strategies, conditions, analysis } from '@/stores/define'
-import { useRouter } from 'vue-router';
+
 const router = useRouter();
-const totalPage = computed(() => {
-  return Math.ceil(stockNumber.value / pageSize)
-})
-let gotoInput;
 const store = useStockStore();
 const {
   stockNumber,
@@ -25,32 +22,29 @@ const {
   analysisIndex,
   stockCode,
 } = storeToRefs(store);
-// 点击股票代码跳转到对应顶/底分型数据显示
+const totalPage = computed(() => {
+  return Math.ceil(stockNumber.value / pageSize)
+})
+let gotoInput;//页码跳转框
+
+/* 点击股票代码跳转到对应顶/底分型数据显示 */
 function showDetail(stock) {
   console.log("stockCode: ", stock.name);
   window.open(
     router.resolve({
-      name: 'StockDetail',
+      name: 'StockFmark',
       query: {
         stockCode: stock.name,
       },
     }).href, '_blank'
   );
-  // 传递股票代码到目标页面
-  // router.push({
-  //   name: 'StockDetail',
-  //   query: {
-  //     stockCode: stock.name,
-  //   },
-  // });
 }
-// 监听股票代码输入并按回车键进行查询
-const onStockCodeInput = (event) => {
+/* 监听股票代码按回车键进行查询 */
+const onStockCodeInput = () => {
   selectedDate.value = ''
-  console.log('股票代码变化，日期已清空');
   fetchData()
 }
-// 计算选中的复盘条件、策略和大数据分析
+/* 计算选中的复盘条件、策略和大数据分析 */
 const selectedCondition = computed(() => {
   return conditions[replayIndex.value] || '';
 });
@@ -60,7 +54,7 @@ const selectedStrategy = computed(() => {
 const selectedAnalysis = computed(() => {
   return analysis[analysisIndex.value] || '';
 });
-// 单图表初始化
+/* 单图表初始化 */
 function initChart(id, stock) {
   if (charts.value[id]) {
     charts.value[id].dispose();
@@ -70,16 +64,9 @@ function initChart(id, stock) {
   // 提取成交量和涨跌幅
   const pctChg = data.values.map(v => v[4])
   const volumes = data.values.map(v => v[5])
-  const sv = formatDate(selectedDate.value);
-  // const sv = selectedDate.value;
-  // console.log(1111);
-  // console.log(selectedDate.value);
-  // 买点
-  // qqqqqqqqqq
   const buy = data.values.map(v => v[6])
-  // console.log("日期输出：", data.date);
-  // console.log(data.date);
-  // console.log(selectedDate);
+  const sv = formatDate(selectedDate.value);
+  // 当前日期高亮显示
   const currentDateSeries = stockCode.value.trim() === '' ? [{
     name: '指定日期收盘价',
     type: 'scatter',
@@ -113,7 +100,7 @@ function initChart(id, stock) {
         right: '10%',
         top: 40,
         height: '50%',
-        borderColor: '#ccc', // 加框线
+        borderColor: '#ccc',
         show: true,
       },  // 主图区域
       {
@@ -153,21 +140,18 @@ function initChart(id, stock) {
       },
       {
         gridIndex: 1,
-        // name: '成交量',
         splitNumber: 2,
         offset: 3,
         splitLine: { show: false },
         axisLine: { show: false },
-      },
+      },// 第2个yAxis：成交量
       {
-        scale: true,  // 第3个 yAxis：涨跌幅,防止原始y轴其他元素变形
-        // splitArea: { show: true },
-        // name: '涨跌幅',
+        scale: true,
         axisLabel: {
           show: false,
           formatter: '{value} %',
         },
-      }
+      }// 第3个 yAxis：涨跌幅,防止原始y轴其他元素变形
     ],
     dataZoom: [
       { type: 'inside', start: 0, end: 100, xAxisIndex: [0, 1] },
@@ -248,18 +232,14 @@ function initChart(id, stock) {
         yAxisIndex: 1,
         data: volumes,
         barWidth: '60%',
-        // itemStyle: {
-        //   color: '#915764'
-        // }
         itemStyle: {
           color: function (params) {
             const idx = params.dataIndex;
-            // 判断当前K线是涨还是跌
+            // 判断当前K线涨跌
             // console.log('收盘，', data.values[idx][1], '开盘，', data.values[idx][0]);
-
             return data.values[idx][1] >= data.values[idx][0]
-              ? upColor   // 收盘价 > 开盘价 → 红色
-              : downColor; // 收盘价 < 开盘价 → 绿色
+              ? upColor   // 收>=开 红
+              : downColor; // 收<开 绿
           }
         },
       },
@@ -298,15 +278,13 @@ function initChart(id, stock) {
         : [])
     ],
   });
-  // 为图表的 title 区域绑定点击事件
+  // 点击股票代码跳转到新页面
   chart.on('click', function (params) {
     if (params.componentType === 'title') {
-      // 如果点击的是 title 区域，执行 showDetail 函数
       showDetail(stock);
     }
-  }
-  );
-  charts.value[id] = chart
+  });
+  charts.value[id] = chart;
 }
 
 function fullscreen(idx) {
@@ -417,28 +395,24 @@ const handleAnalysis = (key, keyPath) => {
   fetchData();
 }
 function redictToNewDay() {
-
-  // 获取当前时间
   const currentDate = new Date();
-
-  // 获取当前时间的小时
   const currentHour = currentDate.getHours();
-
-  // 如果当前时间是下午4点前
+  // 下午4点前显示昨天
   if (currentHour < 16) {
-    // 设置为昨天的日期
     const yesterday = new Date(currentDate);
-    yesterday.setDate(currentDate.getDate() - 1);  // 昨天
-    selectedDate.value = formatDate(yesterday);    // 格式化并设置日期
+    yesterday.setDate(currentDate.getDate() - 1);
+    selectedDate.value = formatDate(yesterday);
   } else {
-    // 设置为今天的日期
-    selectedDate.value = formatDate(currentDate);  // 格式化并设置日期
+    // 之后今天
+    selectedDate.value = formatDate(currentDate);
   }
 }
 function fetchData() {
+  /* 传参 */
   const params = new URLSearchParams();
-  console.log("股票代码：", stockCode.value, "类型", typeof (stockCode.value));
-  console.log("replayindex：", replayIndex.value, "类型", typeof (replayIndex.value), "strategyIndex:", strategyIndex.value);
+  // console.log("股票代码：", stockCode.value, "类型", typeof (stockCode.value));
+  // console.log("replayindex：", replayIndex.value, "类型", typeof (replayIndex.value), "strategyIndex:", strategyIndex.value);
+  // 技术指标
   if (replayIndex.value === "1" || replayIndex.value === "2" || replayIndex.value === "3") {
     console.log("涨停跌");
     params.append('pageNum', currentPage.value);
@@ -446,34 +420,36 @@ function fetchData() {
       params.append('tradeDate', formatDate(selectedDate.value));
       // selectedDate.value = formatDate(selectedDate.value)
     } else {
-      selectedDate.value = "2025-3-31";
+      selectedDate.value = "2025-3-31";//TODO:要改标当前日期方法，后端改？传空值也可查询
     }
-    // params.append('tradeDate', selectedDate.value);
   }
-
-  // if (replayIndex.value === "0" && stockCode.value.trim() !== "") {
+  // 策略类型
   if (strategyIndex.value === "1") {
     params.append('page', currentPage.value);
     if (stockCode.value.trim() == "") {
       params.append('date', formatDate(selectedDate.value));
     }
     params.append('ts_code', stockCode.value);
-    console.log("url正确");
+    // console.log("url正确");
   }
+  /* 接口 */
+  // 技术指标
   const baseUrl = 'http://120.27.208.55:8080/api/'
-  let url = baseUrl + 'stock/data'; // 全部
-  if (replayIndex.value === '2') {
+  let url = baseUrl + 'stock/data'; // 默认全部
+  if (replayIndex.value === '1') {
+    url = baseUrl + 'stock/data'; // 全部
+  }
+  else if (replayIndex.value === '2') {
     url = baseUrl + 'stock/limit-up'; // 涨停
   }
   else if (replayIndex.value === '3') {
     url = baseUrl + 'stock/limit-down'; // 跌停
   }
-  else if (replayIndex.value === '1') {
-    url = baseUrl + 'stock/data'; // 全部
-  }
+  // 策略类型
   else if (strategyIndex.value === '1') {
     url = 'http://172.16.32.93:321/stock_bay'; //五日调整
   }
+
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
     headers: {
@@ -492,12 +468,10 @@ function fetchData() {
       if (grid.length === 0) {
         currentPage.value = 0;
       }
-      // const flattened = grid.flat().map(itemList => {
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
         // const startDate = new Date(itemList[0][1]); // 开始时间
         // const endDate = new Date(itemList[itemList.length - 1][1]); // 结束时间
-
         const kline = itemList.map(d => [
           d[1],  // 日期
           d[2],  // open
@@ -519,7 +493,7 @@ function fetchData() {
     });
 }
 
-
+// 监听日期选择
 watch(selectedDate, (newDate) => {
   if (newDate) {
     // console.log(selectedDate);
@@ -529,7 +503,7 @@ watch(selectedDate, (newDate) => {
   }
 });
 
-// 当 stockData 更新，重新初始化所有图表
+// 监听股票数据
 watch(stockData, () => {
   nextTick(() => {
     stockData.value.forEach((stock, idx) => {
@@ -538,7 +512,6 @@ watch(stockData, () => {
     })
   })
 })
-
 </script>
 
 <template>
@@ -605,7 +578,6 @@ watch(stockData, () => {
 
     <div class="grid-container">
       <div class="chart-wrapper" v-for="(stock, idx) in stockData" :key="stock.idx">
-        <!-- <div class="chart" :id="`chart${idx}`" @click="showDetail(stock)"></div> -->
         <div class="chart" :id="`chart${idx}`"></div>
         <button class="fullscreen-btn" @click="fullscreen(idx)">全屏</button>
         <button class="fullscreen-btn" style="right: 80px" @click="exportChart(idx, stock.name)">导出</button>

@@ -1,4 +1,4 @@
-
+/* 日期格式化 */
 export function formatDate(inputDate) {
   const date = new Date(inputDate);
   // YYYY-MM-DD

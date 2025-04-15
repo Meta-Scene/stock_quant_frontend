@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import StockDetail from '../pages/index.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,12 +6,12 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('@/views/index.vue'),
+      component: () => import('@/views/trading.vue'),
     },
     {
-      path: '/StockDetail',
-      name: 'StockDetail',
-      component: ()=>import('@/pages/index.vue'),
+      path: '/StockFmark',
+      name: 'StockFmark',
+      component: ()=>import('@/views/fmark.vue'),
       props: route => ({ stockCode: route.query.stockCode }),
     },
   ],

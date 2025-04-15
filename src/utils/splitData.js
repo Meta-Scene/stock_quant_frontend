@@ -1,4 +1,4 @@
-// 提取k线图数据,传入某支股票的grid_data
+/* 提取k线图数据,传入某支股票的grid_data */
 export function splitData(rawData) {
   const date = [], values = [];
   for (let i = 0; i < rawData.length; i++) {
