@@ -1,69 +1,40 @@
 <script setup>
-import { onMounted, ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
+import { onMounted,computed,watch,nextTick,onBeforeUnmount} from 'vue'
 import * as echarts from 'echarts'
-
-import { useRouter } from 'vue-router';
+import useStockStore from '@/stores/stockStore';
 import { formatDate } from '@/utils/dateUtils';
 import { splitData } from '@/utils/splitData';
 import { MA } from '@/utils/MA';
-
+import { storeToRefs } from 'pinia';
+import { pageSize,upColor,upBorderColor,downColor,downBorderColor,strategies,conditions,analysis } from '@/stores/define'
+import { useRouter } from 'vue-router';
 const router = useRouter();
-
-const stockNumber = ref(0)//总数
-const stockData = ref([])//数据
-// 颜色
-const upColor = '#ec0000';
-const upBorderColor = '#8A0000';
-const downColor = '#00da3c';
-const downBorderColor = '#008F28';
-// 图表实例
-const charts = ref({});
-// 每页大小
-const pageSize = 9;
-// 总页数
 const totalPage = computed(() => {
-  return Math.ceil(stockNumber.value / pageSize)
+    return Math.ceil(stockNumber.value / pageSize)
 })
-// 当前页数
-const currentPage = ref(1)
-// 日期选择
-const selectedDate = ref('');
-// const selectedDate = ref('')
-// 策略选择
-const strategyIndex = ref('0')
-// 复盘条件选择
-const replayIndex = ref('1')
-// 大数据分析
-const analysisIndex = ref('0')
-// 查询买点输入框
-const stockCode = ref('')
-// 策略名称数组
-const strategies = {
-  '1': '五日调整',
-  '2': '打板策略',
-  '3': '日内回转',
-  '4': '波段交易',
-  '5': '基本面选股',
-  '6': '套利交易',
-  '7': '专家跟随',
-  '8': '财务估值',
-};
-// 技术指标数组
-const conditions = {
-  '1': '所有',
-  '2': '每日涨停',
-  '3': '每日跌停',
-  '4': '半年线',
-  '5': '年线',
-  '6': '强于大盘',
-  '7': '弱于大盘',
-  '8': '大盘反向',
-};
-// 大数据分析数组
-const analysis = {
-  '1': '人气排名',
-  '2': '热门板块',
-  '3': '强势板块',
+let gotoInput;
+const store = useStockStore();
+const {
+  stockNumber,
+  stockData,
+  charts,
+  currentPage,
+  selectedDate,
+  strategyIndex,
+  replayIndex,
+  analysisIndex,
+  stockCode,
+  }=storeToRefs(store);
+// 点击股票代码跳转到对应顶/底分型数据显示
+function showDetail(stock) {
+  console.log("stockCode: ", stock.name, "startDate: ", stock.startDate, "endDate: ", stock.endDate);
+  // 传递股票代码到目标页面
+  router.push({
+    name: 'StockDetail',
+    query: {
+      stockCode: stock.name,
+    },
+  });
 }
 // 监听股票代码输入并按回车键进行查询
 const onStockCodeInput = (event) => {
@@ -81,7 +52,6 @@ const selectedStrategy = computed(() => {
 const selectedAnalysis = computed(() => {
   return analysis[analysisIndex.value] || '';
 });
-
 // 单图表初始化
 function initChart(id, stock) {
   if (charts.value[id]) {
@@ -100,10 +70,8 @@ function initChart(id, stock) {
   // qqqqqqqqqq
   const buy = data.values.map(v => v[6])
   // console.log("日期输出：", data.date);
-
   // console.log(data.date);
   // console.log(selectedDate);
-
   const currentDateSeries = stockCode.value.trim() === '' ? [{
     name: '指定日期收盘价',
     type: 'scatter',
@@ -319,8 +287,7 @@ function initChart(id, stock) {
             formatter: 'B'
           },
         }]
-        : [])
-
+      : [])
     ],
   });
   // 为图表的 title 区域绑定点击事件
@@ -331,7 +298,6 @@ function initChart(id, stock) {
     }
   }
   );
-
   charts.value[id] = chart
 }
 
@@ -395,7 +361,7 @@ function nextPage() {
 }
 
 function gotoPage() {
-  const val = parseInt(document.getElementById('gotoInput').value)
+  const val = parseInt(gotoInput)
   if (val >= 1 && val <= totalPage.value) {
     currentPage.value = val
     fetchData();
@@ -433,8 +399,6 @@ const handleReplay = (key, keyPath) => {
   stockCode.value = '';
   selectedDate.value = '2025-03-26';
   currentPage.value = 1;
-  // console.log('这对吗');
-
   fetchData();
 }
 // 更新大数据分析
@@ -467,8 +431,6 @@ function fetchData() {
   const params = new URLSearchParams();
   console.log("股票代码：", stockCode.value, "类型", typeof (stockCode.value));
   console.log("replayindex：", replayIndex.value, "类型", typeof (replayIndex.value), "strategyIndex:", strategyIndex.value);
-
-
   if (replayIndex.value === "1" || replayIndex.value === "2" || replayIndex.value === "3") {
     console.log("涨停跌");
     params.append('pageNum', currentPage.value);
@@ -528,9 +490,9 @@ function fetchData() {
           d[3],  // high
           d[4],  // low
           d[5],  // close
-          d[7],  //涨跌幅
-          d[8],  //成交量
-          d[9],  //买点
+          d[7],  // 涨跌幅
+          d[8],  // 成交量
+          d[9],  // 买点
         ])
         // console.log(kline[8]);
         return { name, data: kline, startDate, endDate }
@@ -562,19 +524,7 @@ watch(stockData, () => {
     })
   })
 })
-function showDetail(stock) {
-  console.log("stockCode: ", stock.name, "startDate: ", stock.startDate, "endDate: ", stock.endDate);
 
-  // 传递股票代码到目标页面
-  router.push({
-    name: 'StockDetail',
-    query: {
-      stockCode: stock.name,
-      // startDate: formatDate(stock.startDate),
-      // endDate: formatDate(stock.endDate),
-    },
-  });
-}
 </script>
 
 <template>
@@ -653,7 +603,7 @@ function showDetail(stock) {
       <span>第 <span>{{ currentPage }}</span> /
         <span> {{ totalPage }}</span> 页</span>
       <button @click="nextPage()">下一页</button>
-      <input type="number" id="gotoInput" style="width: 60px" placeholder="页码" />
+      <input type="number" v-model="gotoInput" style="width: 60px" placeholder="页码" />
       <button @click="gotoPage()">跳转</button>
     </div>
   </div>

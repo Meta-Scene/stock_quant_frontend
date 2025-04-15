@@ -1,17 +1,60 @@
-<script>
+<script setup>
 import { useRoute } from 'vue-router';
+defineProps({ name: 'StockDetail' });
+const route = useRoute();
+const ts_code = route.query.stockCode;
+// const startDate = route.query.startDate;
+// const endDate = route.query.endDate;
+console.log(`股票代码: ${ts_code}`);
 
-export default {
-  name: 'StockDetail',
-  setup() {
-    const route = useRoute();
-    const ts_code = route.query.stockCode;
-    // const startDate = route.query.startDate;
-    // const endDate = route.query.endDate;
-    console.log(`股票代码: ${ts_code}`);
-  }
+function fetchDetail() {
+  const params = new URLSearchParams();
+  params.append('ts_code', ts_code);
+  const url = 'http://120.27.208.55:8080/api/'
+  fetch(`${url}?${params.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('网络响应失败');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('成功:', data);
+      const grid = data.grid_data || [];
+      if (grid.length === 0) {
+        currentPage.value = 0;
+      }
+      // const flattened = grid.flat().map(itemList => {
+      const flattened = grid.map(itemList => {
+        const name = itemList[0][0] // 股票代码
+        const startDate = new Date(itemList[0][1]); // 开始时间
+        const endDate = new Date(itemList[itemList.length - 1][1]); // 结束时间
+
+        const kline = itemList.map(d => [
+          d[1],  // 日期
+          d[2],  // open
+          d[3],  // high
+          d[4],  // low
+          d[5],  // close
+          d[7],  // 涨跌幅
+          d[8],  // 成交量
+          d[9],  // 买点
+        ])
+        // console.log(kline[8]);
+        return { name, data: kline, startDate, endDate }
+      })
+      stockData.value = flattened
+      stockNumber.value = data.stock_count
+    })
+    .catch(error => {
+      console.error('数据获取失败:', error);
+    });
 }
-
 function initChart(stock) {
   const chartContainer = document.getElementById('chart');  // 直接使用一个固定的 id
   if (charts.value['chart']) {

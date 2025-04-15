@@ -1,12 +1,19 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { pageSize } from './define'
 
-export const useStockStore = defineStore('stock', () => {
-  const stockNumber = ref(0)//总数
-  const stockData = ref([])//数据
-  // 图表实例
-const charts = ref({});
-// // 引用图表容器
-// const chartContainer = ref(null);
-
+export default defineStore('stock', {
+  state:() => {
+    return{
+      stockNumber:0,
+      stockData:[],
+      charts:{},
+      currentPage:1,
+      selectedDate:'',
+      strategyIndex:'0',
+      replayIndex:'1',
+      analysisIndex:'0',
+      stockCode:'',
+    }
+  }
 })
