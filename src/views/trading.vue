@@ -449,7 +449,7 @@ function fetchData() {
   }
   // 策略类型
   else if (strategyIndex.value === '1') {
-    url = 'http://172.16.32.93:321/stock_bay'; //五日调整
+    url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
   }
 
   fetch(`${url}?${params.toString()}`, {

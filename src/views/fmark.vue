@@ -17,7 +17,7 @@ onMounted(() => {
 function fetchDetail() {
   const params = new URLSearchParams();
   params.append('ts_code', ts_code);
-  const url = 'http://172.16.32.93:321/stock_fmark'
+  const url = 'http://120.27.208.55:10015/stock_fmark'
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
     headers: {
