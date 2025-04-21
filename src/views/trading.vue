@@ -442,16 +442,39 @@ const handleAnalysis = (key, keyPath) => {
 function redictToNewDay() {
   const currentDate = new Date();
   const currentHour = currentDate.getHours();
-  // 下午6点前显示昨天
-  if (currentHour < 18) {
+  const currentDay = currentDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+  const getLastFriday = (baseDate) => {
+    const day = baseDate.getDay();
+    const diff = day >= 5 ? day - 5 : day + 2; // 如果是周六(6)日(0)，+2 或 -5
+    const lastFriday = new Date(baseDate);
+    lastFriday.setDate(baseDate.getDate() - diff);
+    return lastFriday;
+  };
+
+  let targetDate;
+
+  if (currentDay === 0 || currentDay === 6) {
+    // 周六、周日 → 显示本周五
+    targetDate = getLastFriday(currentDate);
+  } else if (currentDay === 1 && currentHour < 18) {
+    // 周一18点前 → 显示上周五
+    const lastFriday = new Date(currentDate);
+    lastFriday.setDate(currentDate.getDate() - 3);
+    targetDate = lastFriday;
+  } else if (currentHour < 18) {
+    // 其他工作日18点前 → 显示昨天
     const yesterday = new Date(currentDate);
     yesterday.setDate(currentDate.getDate() - 1);
-    selectedDate.value = formatDate(yesterday);
+    targetDate = yesterday;
   } else {
-    // 之后今天
-    selectedDate.value = formatDate(currentDate);
+    // 其他工作日18点后 → 显示今天
+    targetDate = currentDate;
   }
+
+  selectedDate.value = formatDate(targetDate);
 }
+
 function fetchData() {
   /* 传参 */
   const params = new URLSearchParams();
