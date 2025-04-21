@@ -35,7 +35,7 @@ function fetchDetail() {
       const grid = data.data || [];
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
-        const true_name = itemList[0][11];//股票名称
+        const true_name = itemList[0][13];//股票名称
         console.log("true_name", true_name);
 
         const kline = itemList.map(d => [
@@ -48,7 +48,7 @@ function fetchDetail() {
           d[8],  // 成交量
           d[9],  // 买点
           d[10], // fmark
-          d[11], // 股票名称
+          d[13], // 股票名称
         ])
         return { name, data: kline, true_name }
       })
@@ -79,7 +79,7 @@ function splitData(rawData) {
       rawData[i][6], // vol
       rawData[i][7], // buy
       rawData[i][8], // fmark
-      rawData[i][9], // 股票名称
+      rawData[i][11], // 股票名称
     ])
   }
   return { date, values };
