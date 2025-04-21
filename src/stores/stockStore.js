@@ -12,6 +12,7 @@ export default defineStore('stock', {
       replayIndex:'1',
       analysisIndex:'0',
       stockSearch:'',
+      fmark_total:[],
     }
   }
 })

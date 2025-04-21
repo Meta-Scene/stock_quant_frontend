@@ -1,9 +1,19 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import * as echarts from 'echarts'
 import { upColor, upBorderColor, downColor, downBorderColor } from '@/stores/define'
 import { MA } from '@/utils/MA';
+import useStockStore from '@/stores/stockStore';
+import { storeToRefs } from 'pinia';
+
+const store = useStockStore();
+const {
+  fmark_total,
+} = storeToRefs(store);
+
+console.log("fmark_total:", fmark_total.value);
+
 
 defineProps({ name: 'StockFmark' });
 const route = useRoute();
@@ -119,7 +129,7 @@ function initChart(stock) {
         left: '13%',
         right: '10%',
         top: 40,
-        height: '50%',
+        height: '55%',
         borderColor: '#ccc', // 加框线
         show: true,
       },  // 主图区域
@@ -347,32 +357,64 @@ function initChart(stock) {
     ],
   });
 }
+const ts_codes = ['000008.SZ', '000526.SZ', '000729.SZ', '000733.SZ', '000822.SZ', '001317.SZ', '002084.SZ', '002306.SZ', '002365.SZ', '002371.SZ', '002800.SZ', '300106.SZ', '300203.SZ', '300240.SZ', '300346.SZ', '300395.SZ', '300851.SZ', '300995.SZ', '301052.SZ', '600012.SH', '600127.SH'];
+
+const current_page = ref(find_current_code() + 1);
+const total_page = ref(ts_codes.length);
+
+function find_current_code() {
+  for (let i = 0; i < ts_codes.length; i++) {
+    if (ts_codes[i] == ts_code) {
+      return i;
+    }
+  }
+}
 </script>
 
 <template>
-  <div class="chart-container">
-    <div class="chart-wrapper">
-      <div class="chart" id="chart1"></div>
-      <button class="export-btn" @click="exportChart">导出</button>
+  <div id="f">
+    <div class="chart-container">
+      <div class="chart-wrapper">
+        <div class="chart" id="chart1"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button @click="prevPage()">上一页</button>
+      <span>第 <span>{{ current_page }}</span> /
+        <span> {{ total_page }}</span> 页</span>
+      <button @click="nextPage()">下一页</button>
+      <input type="number" v-model="gotoInput" style="width: 60px" placeholder="页码" />
+      <button @click="gotoPage()">跳转</button>
     </div>
   </div>
 </template>
 
 <style scoped>
 /* 图表 */
-#app {
+html,
+body {
+  margin: 0;
+  padding: 0;
   height: 100%;
+  background-color: #f4f6f8;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #333;
+  overflow: hidden;
+}
+
+#f {
+  height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 .chart-container {
-  width: 100%;
-  height: 100%;
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
 
 .chart-wrapper {
@@ -382,31 +424,47 @@ function initChart(stock) {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  font-size: 14px;
+  padding: 6px 10px;
 }
 
 .chart {
   width: 100%;
   height: 100%;
   border-radius: 8px;
-
 }
 
-.chart-wrapper {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 9999;
-  background-color: #fff;
+/* 分页栏 */
+.controls {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 10px;
+  gap: 10px;
+  height: 40px;
+  font-size: 14px;
+  background-color: #ffffff;
+  border-top: 1px solid #eee;
+}
+
+.controls button {
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.controls input {
+  height: 26px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
 }
 
 .chart-wrapper .chart {
   height: 100vh !important;
-}
-
-.chart-wrapper {
-  font-size: 14px;
-  padding: 6px 10px;
 }
 </style>

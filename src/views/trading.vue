@@ -21,6 +21,7 @@ const {
   replayIndex,
   analysisIndex,
   stockSearch,
+  fmark_total,
 } = storeToRefs(store);
 const totalPage = computed(() => {
   return Math.ceil(stockNumber.value / pageSize)
@@ -514,6 +515,12 @@ function fetchData() {
     .then(data => {
       console.log('成功:', data);
       const grid = data.grid_data || [];
+      // 把全部的股票代码拿到
+      if (data.ts_codes) {
+        fmark_total.value = data.ts_codes;
+        console.log("first get fmark_total:", fmark_total.value);
+
+      }
       //grid.length
       if (data.stock_count === 0) {
         currentPage.value = 0;
