@@ -35,6 +35,9 @@ function fetchDetail() {
       const grid = data.data || [];
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
+        const true_name = itemList[0][11];//股票名称
+        console.log("true_name", true_name);
+
         const kline = itemList.map(d => [
           d[1],  // 日期
           d[2],  // open
@@ -45,8 +48,9 @@ function fetchDetail() {
           d[8],  // 成交量
           d[9],  // 买点
           d[10], // fmark
+          d[11], // 股票名称
         ])
-        return { name, data: kline }
+        return { name, data: kline, true_name }
       })
 
       flattened.forEach((stock) => {
@@ -75,6 +79,7 @@ function splitData(rawData) {
       rawData[i][6], // vol
       rawData[i][7], // buy
       rawData[i][8], // fmark
+      rawData[i][9], // 股票名称
     ])
   }
   return { date, values };
@@ -84,6 +89,7 @@ function splitData(rawData) {
   values[i][5] 成交量
   values[i][6] 买点
   values[i][7] 顶底分型
+
   */
 }
 
@@ -95,11 +101,12 @@ function initChart(stock) {
   const volumes = data.values.map(v => v[5])
   const buy = data.values.map(v => v[6])
   const fmark = data.values.map(v => v[7])
+  // const name = data.values.map(v => v[10])
   const filteredFmark = fmark
     .map((value, index) => (value !== 0 ? [data.date[index], value] : null))
     .filter(v => v !== null);
   chart.setOption({
-    title: { text: stock.name, left: '0', triggerEvent: true },
+    title: { text: stock.true_name, left: '0', triggerEvent: true },
     // 交叉线
     tooltip: {
       trigger: 'axis', axisPointer: { type: 'cross' },
@@ -336,7 +343,7 @@ function initChart(stock) {
             formatter: 'B'
           },
         }]
-      : [])
+        : [])
     ],
   });
 }

@@ -30,7 +30,7 @@ let gotoInput;//页码跳转框
 /* 点击股票代码跳转到对应顶/底分型数据显示 */
 function showDetail(stock) {
   // console.log("stockCode: ", stock.name);
-  if(strategyIndex.value!='0'){
+  if (strategyIndex.value != '0') {
     window.open(
       router.resolve({
         name: 'StockFmark',
@@ -63,10 +63,14 @@ function initChart(id, stock) {
   }
   const data = splitData(stock.data)
   const chart = echarts.init(document.getElementById(id))
-  // 提取成交量和涨跌幅
-  const pctChg = data.values.map(v => v[4])
-  const volumes = data.values.map(v => v[5])
-  const buy = data.values.map(v => v[6])
+  // 提取涨跌幅,成交量,买点,半年线,年线,股票名称
+  const pctChg = data.values.map(v => v[4]);
+  const volumes = data.values.map(v => v[5]);
+  const buy = data.values.map(v => v[6]);
+  const halfYear = data.values.map(v => v[7]);
+  const wholeYear = data.values.map(v => v[8]);
+  // const stockName = data.values.map(v => v[9]);
+  //为显示当前日期黄色标记点，格式化日期
   const sv = formatDate(selectedDate.value);
   // 当前日期高亮显示
   const currentDateSeries = stockCode.value.trim() === '' ? [{
@@ -86,9 +90,45 @@ function initChart(id, stock) {
     }
   }
   ] : [];
-
+  //选择半年线才显示
+  const halfYearLineShow = replayIndex.value === '4' ? [{
+    name: 'MA120',
+    type: 'line',
+    data: halfYear,
+    smooth: true,
+    lineStyle: {
+      color: '#ff77ff',
+      width: 1.5,
+    },
+    symbol: 'circle',
+    symbolSize: 5,
+    itemStyle: {
+      color: '#ff77ff',
+    },
+  },
+  ] : [];
+  //选择年线才显示
+  const wholeYearLineShow = replayIndex.value === '5' ? [{
+    name: 'MA250',
+    type: 'line',
+    data: wholeYear,
+    smooth: true,
+    lineStyle: {
+      color: '#581845',
+      width: 1.5,
+    },
+    symbol: 'circle',
+    symbolSize: 5,
+    itemStyle: {
+      color: '#581845',
+    },
+  },
+  ] : [];
+  //test
+  // console.log("stock.name是:", stock.name, "stockName是:", stockName);
   chart.setOption({
-    title: { text: stock.name, left: '0', triggerEvent: true },
+    // title: { text: stock.name, left: '0', triggerEvent: true },
+    title: { text: stock.true_name, left: '0', triggerEvent: true },//改为显示股票名称
     // 交叉线
     tooltip: {
       trigger: 'axis', axisPointer: { type: 'cross' },
@@ -227,6 +267,8 @@ function initChart(id, stock) {
           color: '#4682b4',
         },
       },
+      ...halfYearLineShow,
+      ...wholeYearLineShow,
       {
         name: '成交量',
         type: 'bar',
@@ -360,7 +402,7 @@ function gotoPage() {
 
 onMounted(() => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
-  // redictToNewDay();
+  redictToNewDay();
   fetchData();
 })
 
@@ -385,7 +427,8 @@ const handleReplay = (key, keyPath) => {
   replayIndex.value = key;
   strategyIndex.value = '0';
   stockCode.value = '';
-  selectedDate.value = '2025-03-31';
+  // selectedDate.value = '2025-03-31';
+  redictToNewDay();
   currentPage.value = 1;
   fetchData();
 }
@@ -399,8 +442,8 @@ const handleAnalysis = (key, keyPath) => {
 function redictToNewDay() {
   const currentDate = new Date();
   const currentHour = currentDate.getHours();
-  // 下午4点前显示昨天
-  if (currentHour < 16) {
+  // 下午6点前显示昨天
+  if (currentHour < 18) {
     const yesterday = new Date(currentDate);
     yesterday.setDate(currentDate.getDate() - 1);
     selectedDate.value = formatDate(yesterday);
@@ -415,15 +458,15 @@ function fetchData() {
   // console.log("股票代码：", stockCode.value, "类型", typeof (stockCode.value));
   // console.log("replayindex：", replayIndex.value, "类型", typeof (replayIndex.value), "strategyIndex:", strategyIndex.value);
   // 技术指标
-  if (replayIndex.value === "1" || replayIndex.value === "2" || replayIndex.value === "3") {
-    console.log("涨停跌");
+  if (replayIndex.value === "1" || replayIndex.value === "2" || replayIndex.value === "3" || replayIndex.value === "4" || replayIndex.value === "5") {
+    console.log("技术指标");
     params.append('pageNum', currentPage.value);
-    if (selectedDate.value) {
-      params.append('tradeDate', formatDate(selectedDate.value));
-      // selectedDate.value = formatDate(selectedDate.value)
-    } else {
-      selectedDate.value = "2025-3-31";//TODO:要改标当前日期方法，后端改？传空值也可查询
-    }
+    // if (selectedDate.value) {
+    params.append('tradeDate', formatDate(selectedDate.value));
+    // selectedDate.value = formatDate(selectedDate.value)
+    // } else {
+    //   selectedDate.value = "2025-03-31";//TODO:要改标当前日期方法，后端改？传空值也可查询
+    // }
   }
   // 策略类型
   if (strategyIndex.value === "1") {
@@ -437,6 +480,7 @@ function fetchData() {
   /* 接口 */
   // 技术指标
   const baseUrl = 'http://120.27.208.55:8080/api/'
+  // const baseUrl = 'http://172.16.32.88:8080/api/'
   let url = baseUrl + 'stock/data'; // 默认全部
   if (replayIndex.value === '1') {
     url = baseUrl + 'stock/data'; // 全部
@@ -447,9 +491,18 @@ function fetchData() {
   else if (replayIndex.value === '3') {
     url = baseUrl + 'stock/limit-down'; // 跌停
   }
+  else if (replayIndex.value === '4') {
+    url = baseUrl + 'stock/half-year-line';//半年线
+    // url = 'http://172.16.32.88:8080/api/stock/half-year-line';
+  }
+  else if (replayIndex.value === '5') {
+    url = baseUrl + 'stock/year-line';//年线
+    // url = 'http://172.16.32.88:8080/api/stock/year-line';
+  }
   // 策略类型
   else if (strategyIndex.value === '1') {
     url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
+    // url = 'http://172.16.32.93:10015/stock_bay'; //五日调整
   }
 
   fetch(`${url}?${params.toString()}`, {
@@ -457,6 +510,7 @@ function fetchData() {
     headers: {
       'Content-Type': 'application/json',
     },
+    cache: 'no-cache', // 禁用缓存
   })
     .then(response => {
       if (!response.ok) {
@@ -472,6 +526,9 @@ function fetchData() {
       }
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
+        const true_name = itemList[0][12];//股票名称
+        console.log("truename", true_name);
+
         // const startDate = new Date(itemList[0][1]); // 开始时间
         // const endDate = new Date(itemList[itemList.length - 1][1]); // 结束时间
         const kline = itemList.map(d => [
@@ -483,9 +540,12 @@ function fetchData() {
           d[7],  // 涨跌幅
           d[8],  // 成交量
           d[9],  // 买点
+          d[10], // 半年线
+          d[11], // 年线
+          d[12], // 股票名称
         ])
-        // console.log(kline[8]);
-        return { name, data: kline }
+        console.log("11111111111111111111111", kline[11]);
+        return { name, data: kline, true_name }
       })
       stockData.value = flattened
       stockNumber.value = data.stock_count

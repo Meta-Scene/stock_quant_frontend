@@ -11,6 +11,9 @@ export function splitData(rawData) {
       rawData[i][5], // pct_chg
       rawData[i][6], // vol
       rawData[i][7], // buy
+      rawData[i][8], // MA120
+      rawData[i][9], // MA250
+      rawData[i][10], // 股票名称
     ])
   }
   return { date, values };
@@ -18,5 +21,9 @@ export function splitData(rawData) {
   values[i][0-3] 开盘 最高 最低 收盘
   values[i][4] 涨跌幅
   values[i][5] 成交量
+  values[i][6] 买点
+  values[i][7] 半年线
+  values[i][8] 年线
+  values[i][9] 股票名称
   */
 }
