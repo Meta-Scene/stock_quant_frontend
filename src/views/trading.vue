@@ -1,6 +1,6 @@
 <script setup>
 import * as echarts from 'echarts'
-import { onMounted, computed, watch, nextTick, onBeforeUnmount } from 'vue'
+import { onMounted, computed, watch, nextTick, onBeforeUnmount, ref } from 'vue'
 import useStockStore from '@/stores/stockStore';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
@@ -26,7 +26,7 @@ const {
 const totalPage = computed(() => {
   return Math.ceil(stockNumber.value / pageSize)
 })
-let gotoInput;//页码跳转框
+const gotoInput=ref('');//页码跳转框
 
 /* 点击股票代码跳转到对应顶/底分型数据显示 */
 function showDetail(stock) {
@@ -393,7 +393,7 @@ function nextPage() {
 }
 
 function gotoPage() {
-  const val = parseInt(gotoInput)
+  const val = parseInt(gotoInput.value)
   if (val >= 1 && val <= totalPage.value) {
     currentPage.value = val
     fetchData();
@@ -518,7 +518,7 @@ function fetchData() {
       // 把全部的股票代码拿到
       if (data.ts_codes) {
         fmark_total.value = data.ts_codes;
-        console.log("first get fmark_total:", fmark_total.value);
+        // console.log("first get fmark_total:", fmark_total.value);
 
       }
       //grid.length
@@ -528,7 +528,7 @@ function fetchData() {
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
         const true_name = itemList[0][12];//股票名称
-        console.log("truename", true_name);
+        // console.log("truename", true_name);
         const kline = itemList.map(d => [
           d[1],  // 日期
           d[2],  // open

@@ -14,5 +14,10 @@ export default defineStore('stock', {
       stockSearch:'',
       fmark_total:[],
     }
+  },
+  persist:{
+    key:"stock",
+    paths: ['fmark_total'], // ✅ 只持久化 fmark_total
+    storage: localStorage,
   }
 })
