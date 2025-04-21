@@ -11,7 +11,7 @@ export default defineStore('stock', {
       strategyIndex:'0',
       replayIndex:'1',
       analysisIndex:'0',
-      stockCode:'',
+      stockSearch:'',
     }
   }
 })

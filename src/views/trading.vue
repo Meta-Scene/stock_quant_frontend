@@ -20,7 +20,7 @@ const {
   strategyIndex,
   replayIndex,
   analysisIndex,
-  stockCode,
+  stockSearch,
 } = storeToRefs(store);
 const totalPage = computed(() => {
   return Math.ceil(stockNumber.value / pageSize)
@@ -73,7 +73,8 @@ function initChart(id, stock) {
   //为显示当前日期黄色标记点，格式化日期
   const sv = formatDate(selectedDate.value);
   // 当前日期高亮显示
-  const currentDateSeries = stockCode.value.trim() === '' ? [{
+  const currentDateSeries = stockSearch.value.trim() === '' ? [{
+    // const currentDateSeries = stockName === '' ? [{
     name: '指定日期收盘价',
     type: 'scatter',
     coordinateSystem: 'cartesian2d',
@@ -403,7 +404,7 @@ function gotoPage() {
 onMounted(() => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   selectedDate.value = redictToNewDay();
-  fetchData();
+  // fetchData();
 })
 
 onBeforeUnmount(() => {
@@ -415,7 +416,8 @@ const handleStrategy = (key, keyPath) => {
   // console.log(key, keyPath)
   strategyIndex.value = key;
   replayIndex.value = '0';
-  stockCode.value = '';
+  stockSearch.value = '';
+  // stockName = '';
   // selectedDate.value = '';
   selectedDate.value = redictToNewDay();
   currentPage.value = 1;
@@ -426,7 +428,8 @@ const handleReplay = (key, keyPath) => {
   // console.log(key, keyPath)
   replayIndex.value = key;
   strategyIndex.value = '0';
-  stockCode.value = '';
+  stockSearch.value = '';
+  // stockName = '';
   // selectedDate.value = '2025-03-31';
   selectedDate.value = redictToNewDay();
   currentPage.value = 1;
@@ -460,10 +463,11 @@ function fetchData() {
   // 策略类型
   if (strategyIndex.value === "1") {
     params.append('page', currentPage.value);
-    if (stockCode.value.trim() == "") {
+    if (stockSearch.value.trim() == "") {
+      // if (stockName == '') {
       params.append('date', formatDate(selectedDate.value));
     }
-    params.append('ts_code', stockCode.value);
+    params.append('ts_code', stockSearch.value);
     // console.log("url正确");
   }
   /* 接口 */
@@ -510,16 +514,14 @@ function fetchData() {
     .then(data => {
       console.log('成功:', data);
       const grid = data.grid_data || [];
-      if (grid.length === 0) {
+      //grid.length
+      if (data.stock_count === 0) {
         currentPage.value = 0;
       }
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
         const true_name = itemList[0][12];//股票名称
         console.log("truename", true_name);
-
-        // const startDate = new Date(itemList[0][1]); // 开始时间
-        // const endDate = new Date(itemList[itemList.length - 1][1]); // 结束时间
         const kline = itemList.map(d => [
           d[1],  // 日期
           d[2],  // open
@@ -533,7 +535,7 @@ function fetchData() {
           d[11], // 年线
           d[12], // 股票名称
         ])
-        console.log("11111111111111111111111", kline[11]);
+        // console.log("11111111111111111111111", kline[11]);
         return { name, data: kline, true_name }
       })
       stockData.value = flattened
@@ -548,7 +550,8 @@ function fetchData() {
 watch(selectedDate, (newDate) => {
   if (newDate) {
     // console.log(selectedDate);
-    stockCode.value = '';// 清空股票代码
+    stockSearch.value = '';// 清空股票查询框
+    // stockName = '';
     currentPage.value = 1; // 将当前页码重置为1
     fetchData();
   }
@@ -573,8 +576,8 @@ watch(stockData, () => {
       </div>
       <div class="select-container">
         <div class="column">
-          <span class="label">股票代码</span>
-          <el-input v-model="stockCode" style="width: 150px" placeholder="输入股票代码" clearable
+          <span class="label">股票查询</span>
+          <el-input v-model="stockSearch" style="width: 150px" placeholder="输入名称/代码" clearable
             @keyup.enter="onStockCodeInput" />
         </div>
         <div class="column">
