@@ -4,7 +4,7 @@ import { onMounted, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import useStockStore from '@/stores/stockStore';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
-import { formatDate } from '@/utils/dateUtils';
+import { formatDate, redictToNewDay } from '@/utils/dateUtils';
 import { splitData } from '@/utils/splitData';
 import { MA } from '@/utils/MA';
 import { pageSize, upColor, upBorderColor, downColor, downBorderColor, strategies, conditions, analysis } from '@/stores/define'
@@ -402,7 +402,7 @@ function gotoPage() {
 
 onMounted(() => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
-  redictToNewDay();
+  selectedDate.value = redictToNewDay();
   fetchData();
 })
 
@@ -417,7 +417,7 @@ const handleStrategy = (key, keyPath) => {
   replayIndex.value = '0';
   stockCode.value = '';
   // selectedDate.value = '';
-  redictToNewDay();
+  selectedDate.value = redictToNewDay();
   currentPage.value = 1;
   fetchData();
 }
@@ -428,7 +428,7 @@ const handleReplay = (key, keyPath) => {
   strategyIndex.value = '0';
   stockCode.value = '';
   // selectedDate.value = '2025-03-31';
-  redictToNewDay();
+  selectedDate.value = redictToNewDay();
   currentPage.value = 1;
   fetchData();
 }
@@ -439,41 +439,7 @@ const handleAnalysis = (key, keyPath) => {
   currentPage.value = 1;
   fetchData();
 }
-function redictToNewDay() {
-  const currentDate = new Date();
-  const currentHour = currentDate.getHours();
-  const currentDay = currentDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
-  const getLastFriday = (baseDate) => {
-    const day = baseDate.getDay();
-    const diff = day >= 5 ? day - 5 : day + 2; // 如果是周六(6)日(0)，+2 或 -5
-    const lastFriday = new Date(baseDate);
-    lastFriday.setDate(baseDate.getDate() - diff);
-    return lastFriday;
-  };
-
-  let targetDate;
-
-  if (currentDay === 0 || currentDay === 6) {
-    // 周六、周日 → 显示本周五
-    targetDate = getLastFriday(currentDate);
-  } else if (currentDay === 1 && currentHour < 18) {
-    // 周一18点前 → 显示上周五
-    const lastFriday = new Date(currentDate);
-    lastFriday.setDate(currentDate.getDate() - 3);
-    targetDate = lastFriday;
-  } else if (currentHour < 18) {
-    // 其他工作日18点前 → 显示昨天
-    const yesterday = new Date(currentDate);
-    yesterday.setDate(currentDate.getDate() - 1);
-    targetDate = yesterday;
-  } else {
-    // 其他工作日18点后 → 显示今天
-    targetDate = currentDate;
-  }
-
-  selectedDate.value = formatDate(targetDate);
-}
 
 function fetchData() {
   /* 传参 */
