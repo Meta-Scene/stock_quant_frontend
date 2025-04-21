@@ -405,7 +405,7 @@ function gotoPage() {
 onMounted(() => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   selectedDate.value = redictToNewDay();
-  // fetchData();
+  fetchData();
 })
 
 onBeforeUnmount(() => {
@@ -462,7 +462,7 @@ function fetchData() {
     // }
   }
   // 策略类型
-  if (strategyIndex.value === "1") {
+  if (strategyIndex.value === "1"||strategyIndex.value === "2"||strategyIndex.value === "3"||strategyIndex.value === "4"||strategyIndex.value === "5") {
     params.append('page', currentPage.value);
     if (stockSearch.value.trim() == "") {
       // if (stockName == '') {
@@ -496,6 +496,22 @@ function fetchData() {
   // 策略类型
   else if (strategyIndex.value === '1') {
     url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
+    // url = 'http://172.16.32.93:10015/stock_bay'; //五日调整
+  }
+  else if (strategyIndex.value === '2') {
+    // url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
+    // url = 'http://172.16.32.93:10015/stock_bay'; //五日调整
+  }
+  else if (strategyIndex.value === '3') {
+    // url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
+    // url = 'http://172.16.32.93:10015/stock_bay'; //五日调整
+  }
+  else if (strategyIndex.value === '4') {
+    // url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
+    // url = 'http://172.16.32.93:10015/stock_bay'; //五日调整
+  }
+  else if (strategyIndex.value === '5') {
+    // url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
     // url = 'http://172.16.32.93:10015/stock_bay'; //五日调整
   }
 
@@ -624,13 +640,17 @@ watch(stockData, () => {
             <el-sub-menu index="strategy">
               <template #title>策略类型</template>
               <el-menu-item index="1">🟢 五日调整</el-menu-item>
-              <el-menu-item index="2">🟡 打板策略</el-menu-item>
-              <el-menu-item index="3">🟡 日内回转</el-menu-item>
-              <el-menu-item index="4">🟡 波段交易</el-menu-item>
-              <el-menu-item index="5">🔴 基本面选股</el-menu-item>
-              <el-menu-item index="6">🔴 套利交易</el-menu-item>
-              <el-menu-item index="7">🔴 专家跟随</el-menu-item>
-              <el-menu-item index="8">🔴 财务估值</el-menu-item>
+              <el-menu-item index="2">🟢 MACD金叉</el-menu-item>
+              <el-menu-item index="3">🟢 KDJ金叉</el-menu-item>
+              <el-menu-item index="4">🟢 yq</el-menu-item>
+              <el-menu-item index="5">🟢 gfh</el-menu-item>
+              <el-menu-item index="6">🟡 打板策略</el-menu-item>
+              <el-menu-item index="7">🟡 日内回转</el-menu-item>
+              <el-menu-item index="8">🟡 波段交易</el-menu-item>
+              <el-menu-item index="9">🔴 基本面选股</el-menu-item>
+              <el-menu-item index="10">🔴 套利交易</el-menu-item>
+              <el-menu-item index="11">🔴 专家跟随</el-menu-item>
+              <el-menu-item index="12">🔴 财务估值</el-menu-item>
             </el-sub-menu>
           </el-menu>
         </div>
