@@ -70,7 +70,7 @@ function initChart(id, stock) {
   const buy = data.values.map(v => v[6]);
   const halfYear = data.values.map(v => v[7]);
   const wholeYear = data.values.map(v => v[8]);
-  // const stockName = data.values.map(v => v[9]);
+  // const sell = data.values.map(v => v[10]);//卖点
   //为显示当前日期黄色标记点，格式化日期
   const sv = formatDate(selectedDate.value);
   // 当前日期高亮显示
@@ -321,7 +321,40 @@ function initChart(id, stock) {
             formatter: 'B'
           },
         }]
-        : [])
+        : []),
+      //卖点
+      // ...(sell.length > 0 && sell.some(point => point !== 0)
+      //   ? [{
+      //     name: '卖点',
+      //     type: 'scatter',
+      //     coordinateSystem: 'cartesian2d',
+      //     symbol: 'rect',
+      //     symbolSize: [15, 15],
+      //     data: sell.map((point, idx) => {
+      //       // console.log("idx：", idx);
+      //       // console.log("data.date[idx]:", data.date[idx]);
+      //       if (point !== 0) {
+      //         return {
+      //           value: [data.date[idx], point],
+      //           symbolSize: 15,
+      //         }
+      //       }
+      //       return null;
+      //     }).filter(v => v !== null), // 过滤掉空值
+      //     itemStyle: {
+      //       color: '#f3933e',
+      //     },
+      //     label: {
+      //       show: true,
+      //       position: 'inside',
+      //       align: 'center',
+      //       verticalAlign: 'middle',
+      //       color: '#0e0a03',
+      //       fontSize: 11,
+      //       formatter: 'S'
+      //     },
+      //   }]
+      //   : []),
     ],
   });
   // 点击股票代码跳转到新页面
@@ -473,8 +506,8 @@ function fetchData() {
   }
   /* 接口 */
   // 技术指标
-  const baseUrl = 'http://120.27.208.55:8080/api/'
-  // const baseUrl = 'http://172.16.32.88:8080/api/'
+  // const baseUrl = 'http://120.27.208.55:8080/api/'
+  const baseUrl = 'http://172.16.32.88:8080/api/'
   let url = baseUrl + 'stock/data'; // 默认全部
   if (replayIndex.value === '1') {
     url = baseUrl + 'stock/data'; // 全部
@@ -552,6 +585,7 @@ function fetchData() {
           d[10], // 半年线
           d[11], // 年线
           d[12], // 股票名称
+          // d[13], // 卖点
         ])
         // console.log("11111111111111111111111", kline[11]);
         return { name, data: kline, true_name }

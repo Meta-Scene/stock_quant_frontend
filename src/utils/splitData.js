@@ -14,6 +14,7 @@ export function splitData(rawData) {
       rawData[i][8], // MA120
       rawData[i][9], // MA250
       rawData[i][10], // 股票名称
+      // rawData[i][11], // 卖点
     ])
   }
   return { date, values };

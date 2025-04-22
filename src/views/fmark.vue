@@ -37,7 +37,14 @@ onMounted(() => {
 
 function fetchDetail() {
   const params = new URLSearchParams();
-  params.append('ts_code', fmark_total.value[current_page.value - 1]);
+  let code;
+  if (fmark_total) {
+    code = fmark_total.value[current_page.value - 1]
+  }
+  else {
+    code = ts_code;
+  }
+  params.append('ts_code', ts_code);
   console.log("fmark_total.value", fmark_total.value);
   console.log("current_page", current_page.value);
   console.log("current_page-1", current_page.value - 1);
