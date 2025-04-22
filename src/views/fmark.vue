@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import * as echarts from 'echarts'
 import { upColor, upBorderColor, downColor, downBorderColor } from '@/stores/define'
@@ -11,7 +11,7 @@ const store = useStockStore();
 const {
   fmark_total,
 } = storeToRefs(store);
-
+console.log("fmark_total:", fmark_total.value);
 // console.log("fmark_total:", fmark_total.value);
 
 
@@ -19,25 +19,28 @@ defineProps({ name: 'StockFmark' });
 const route = useRoute();
 const ts_code = route.query.stockCode;
 // console.log(`股票代码: ${ts_code}`);
+const current_page = ref(find_current_code() + 1);
+const total_page = ref(fmark_total.value.length);
+
 
 onMounted(() => {
-  // console.log("fmark_total:", fmark_total.value);
-  fetchDetail();  // 延迟执行 fetchDetail，避免 pinia 持久化恢复尚未完成
-  // setTimeout(() => {
-  //   if (fmark_total.value.length > 0) {
-  //     fetchDetail()
-  //   } else {
-  //     console.warn("fmark_total 为空，请确认是否页面刷新太快或缓存未写入")
-  //   }
-  // }, 100)
+  watch(
+    fmark_total,
+    (val) => {
+      if (val.length > 0) {
+        fetchDetail();
+      }
+    },
+    { immediate: true }
+  );
 })
 
 function fetchDetail() {
   const params = new URLSearchParams();
-  params.append('ts_code', fmark_total.value[current_page.value-1]);
-  // console.log("fmark_total.value",fmark_total.value);
-  // console.log("current_page",current_page.value);
-  // console.log("current_page-1",current_page.value-1);
+  params.append('ts_code', fmark_total.value[current_page.value - 1]);
+  console.log("fmark_total.value", fmark_total.value);
+  console.log("current_page", current_page.value);
+  console.log("current_page-1", current_page.value - 1);
 
 
   // console.log("检查：",fmark_total.value[current_page-1]);
@@ -379,9 +382,6 @@ function initChart(stock) {
 }
 // const ts_codes = ['000008.SZ', '000526.SZ', '000729.SZ', '000733.SZ', '000822.SZ', '001317.SZ', '002084.SZ', '002306.SZ', '002365.SZ', '002371.SZ', '002800.SZ', '300106.SZ', '300203.SZ', '300240.SZ', '300346.SZ', '300395.SZ', '300851.SZ', '300995.SZ', '301052.SZ', '600012.SH', '600127.SH'];
 
-const current_page = ref(find_current_code() + 1);
-const total_page = ref(fmark_total.value.length);
-console.log("fmark_total:",fmark_total.value);
 
 
 function find_current_code() {
@@ -405,7 +405,7 @@ function nextPage() {
     fetchDetail();
   }
 }
-const goto_input=ref('');
+const goto_input = ref('');
 function gotoPage() {
   const val = parseInt(goto_input.value)
   if (val >= 1 && val <= total_page.value) {

@@ -26,7 +26,7 @@ const {
 const totalPage = computed(() => {
   return Math.ceil(stockNumber.value / pageSize)
 })
-const gotoInput=ref('');//页码跳转框
+const gotoInput = ref('');//页码跳转框
 
 /* 点击股票代码跳转到对应顶/底分型数据显示 */
 function showDetail(stock) {
@@ -405,7 +405,7 @@ function gotoPage() {
 onMounted(() => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   selectedDate.value = redictToNewDay();
-  fetchData();
+  // fetchData();
 })
 
 onBeforeUnmount(() => {
@@ -462,7 +462,7 @@ function fetchData() {
     // }
   }
   // 策略类型
-  if (strategyIndex.value === "1"||strategyIndex.value === "2"||strategyIndex.value === "3"||strategyIndex.value === "4"||strategyIndex.value === "5") {
+  if (strategyIndex.value === "1" || strategyIndex.value === "2" || strategyIndex.value === "3" || strategyIndex.value === "4" || strategyIndex.value === "5") {
     params.append('page', currentPage.value);
     if (stockSearch.value.trim() == "") {
       // if (stockName == '') {
@@ -531,12 +531,7 @@ function fetchData() {
     .then(data => {
       console.log('成功:', data);
       const grid = data.grid_data || [];
-      // 把全部的股票代码拿到
-      if (data.ts_codes) {
-        fmark_total.value = data.ts_codes;
-        // console.log("first get fmark_total:", fmark_total.value);
 
-      }
       //grid.length
       if (data.stock_count === 0) {
         currentPage.value = 0;
@@ -563,10 +558,19 @@ function fetchData() {
       })
       stockData.value = flattened
       stockNumber.value = data.stock_count
+      // 把全部的股票代码拿到
+      if (data.ts_codes) {
+        fmark_total.value = data.ts_codes;
+        // 在 fetchData 成功后，确保数据同步到本地存储
+        // localStorage.setItem('fmark_total', JSON.stringify(fmark_total.value));
+        console.log("first get fmark_total:", fmark_total.value);
+
+      }
     })
     .catch(error => {
       console.error('数据获取失败:', error);
     });
+  console.log("赋值后 fmark_total:", fmark_total.value);
 }
 
 // 监听日期选择
