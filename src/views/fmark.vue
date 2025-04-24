@@ -29,6 +29,7 @@ onMounted(() => {
     fmark_total,
     (val) => {
       if (val.length > 0) {
+        current_page.value=find_current_code()+1
         fetchDetail();
       }
     },
