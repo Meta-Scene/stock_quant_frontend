@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import * as echarts from 'echarts'
 import { upColor, upBorderColor, downColor, downBorderColor } from '@/stores/define'
 import { MA } from '@/utils/MA';
@@ -17,6 +17,7 @@ console.log("fmark_total:", fmark_total.value);
 
 defineProps({ name: 'StockFmark' });
 const route = useRoute();
+const router = useRouter();
 const ts_code = route.query.stockCode;
 // console.log(`股票代码: ${ts_code}`);
 const current_page = ref(find_current_code() + 1);
@@ -161,16 +162,16 @@ function initChart(stock) {
         left: '13%',
         right: '10%',
         top: 40,
-        height: '55%',
+        height: '60%',
         borderColor: '#ccc', // 加框线
         show: true,
       },  // 主图区域
       {
         left: '13%',
         right: '10%',
-        top: '75%',
-        bottom: '15%',
-        height: '18%',
+        top: '72%',
+        // bottom: '15%',
+        height: '15%',
         borderColor: '#ccc',
         show: true,
       }
@@ -220,12 +221,13 @@ function initChart(stock) {
     ],
     dataZoom: [
       { type: 'inside', start: 90, end: 100, xAxisIndex: [0, 1] },
-      { type: 'slider', xAxisIndex: [0, 1], show: true, top: '93%', start: 90, end: 100 },
+      { type: 'slider', xAxisIndex: [0, 1], show: true, top: '88%', start: 90, end: 100 },
     ],
     series: [
       {
         name: '日K',
         type: 'candlestick',
+        // z: 10,
         barWidth: '50%',
         data: data.values.map(v => v.slice(0, 4)), // [open, high, low, close]
         itemStyle: {
@@ -366,7 +368,7 @@ function initChart(stock) {
             // console.log("data.date[idx]:", data.date[idx]);
             if (point !== 0) {
               return {
-                value: [data.date[idx], point],
+                value: [data.date[idx], parseFloat((point - 0.08).toFixed(2))],
                 symbolSize: 15,
               }
             }
@@ -391,6 +393,37 @@ function initChart(stock) {
 }
 // const ts_codes = ['000008.SZ', '000526.SZ', '000729.SZ', '000733.SZ', '000822.SZ', '001317.SZ', '002084.SZ', '002306.SZ', '002365.SZ', '002371.SZ', '002800.SZ', '300106.SZ', '300203.SZ', '300240.SZ', '300346.SZ', '300395.SZ', '300851.SZ', '300995.SZ', '301052.SZ', '600012.SH', '600127.SH'];
 
+function updateRouteWithCode() {
+  const code = fmark_total.value[current_page.value - 1]
+  router.replace({ query: { stockCode: code } })
+}
+
+function prevPage() {
+  if (current_page.value > 1) {
+    current_page.value--;
+    updateRouteWithCode();
+    fetchDetail();
+  }
+}
+
+function nextPage() {
+  if (current_page.value < total_page.value) {
+    current_page.value++;
+    updateRouteWithCode();
+    fetchDetail();
+  }
+}
+
+function gotoPage() {
+  const val = parseInt(goto_input.value)
+  if (val >= 1 && val <= total_page.value) {
+    current_page.value = val
+    updateRouteWithCode();
+    fetchDetail();
+  } else {
+    alert('页码无效')
+  }
+}
 
 
 function find_current_code() {
@@ -401,29 +434,29 @@ function find_current_code() {
   }
 }
 
-function prevPage() {
-  if (current_page.value > 1) {
-    current_page.value--;
-    fetchDetail();
-  }
-}
+// function prevPage() {
+//   if (current_page.value > 1) {
+//     current_page.value--;
+//     fetchDetail();
+//   }
+// }
 
-function nextPage() {
-  if (current_page.value < total_page.value) {
-    current_page.value++;
-    fetchDetail();
-  }
-}
+// function nextPage() {
+//   if (current_page.value < total_page.value) {
+//     current_page.value++;
+//     fetchDetail();
+//   }
+// }
 const goto_input = ref('');
-function gotoPage() {
-  const val = parseInt(goto_input.value)
-  if (val >= 1 && val <= total_page.value) {
-    current_page.value = val
-    fetchDetail();
-  } else {
-    alert('页码无效')
-  }
-}
+// function gotoPage() {
+//   const val = parseInt(goto_input.value)
+//   if (val >= 1 && val <= total_page.value) {
+//     current_page.value = val
+//     fetchDetail();
+//   } else {
+//     alert('页码无效')
+//   }
+// }
 
 </script>
 
@@ -434,34 +467,39 @@ function gotoPage() {
         <div class="chart" id="chart1"></div>
       </div>
     </div>
-    <div class="controls">
-      <!-- <button @click="prevPage()">上一页</button>
+    <!-- <div class="controls"> -->
+    <!-- <button @click="prevPage()">上一页</button>
       <span>第 <span>{{ current_page }}</span> /
         <span> {{ total_page }}</span> 页</span>
       <button @click="nextPage()">下一页</button>
       <input type="number" v-model="goto_input" style="width: 60px" placeholder="页码" />
       <button @click="gotoPage()">跳转</button> -->
-      <button class="btn left" @click="prevPage()">&lt;</button> <!-- ‹ 左箭头 -->
-      <button class="btn right" @click="nextPage()">&gt;</button> <!-- › 右箭头 -->
-    </div>
+    <button class="btn left" @click="prevPage()">&lt;</button> <!-- ‹ 左箭头 -->
+    <button class="btn right" @click="nextPage()">&gt;</button> <!-- › 右箭头 -->
+    <!-- </div> -->
   </div>
 </template>
 
 <style scoped>
 /* 图表 */
+
+
 html,
 body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  overflow: hidden;
+  height: 100vh;
   background-color: #f4f6f8;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: #333;
-  overflow: hidden;
+
 }
 
+
 #f {
-  height: 100vh;
+  height: 98vh;
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -473,6 +511,7 @@ body {
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  height: 100%;
 }
 
 .chart-wrapper {
@@ -483,7 +522,13 @@ body {
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   font-size: 14px;
-  padding: 6px 10px;
+  /* padding: 6px 10px; */
+}
+
+.chart-container,
+.chart-wrapper,
+.chart {
+  box-sizing: border-box;
 }
 
 .chart {
@@ -495,8 +540,12 @@ body {
 /* 分页栏 */
 .btn {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  /* top: 50%; */
+  top: calc(50% - 27px);
+  /* 避免 transform */
+  transform: none;
+  /* transform: translateY(-50%); */
+  overflow: hidden;
   width: 54px;
   height: 54px;
   font-size: 32px;
@@ -511,6 +560,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.btn {
+  /* 保证按钮不越界 */
+  box-sizing: border-box;
+  max-height: 100vh;
 }
 
 .btn:hover {
@@ -528,6 +583,6 @@ body {
 }
 
 .chart-wrapper .chart {
-  height: 100vh !important;
+  height: 100% !important;
 }
 </style>

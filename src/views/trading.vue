@@ -204,6 +204,7 @@ function initChart(id, stock) {
     series: [
       {
         name: '日K',
+        z: 10,
         type: 'candlestick',
         barWidth: '50%',
         data: data.values.map(v => v.slice(0, 4)), // [open, high, low, close]
@@ -293,23 +294,27 @@ function initChart(id, stock) {
       ...(buy.length > 0 && buy.some(point => point !== 0)
         ? [{
           name: '买点',
+          // z: 1,
           type: 'scatter',
           coordinateSystem: 'cartesian2d',
           symbol: 'rect',
-          symbolSize: [15, 15],
+          symbolSize: [10, 10],
           data: buy.map((point, idx) => {
             // console.log("idx：", idx);
             // console.log("data.date[idx]:", data.date[idx]);
             if (point !== 0) {
               return {
                 value: [data.date[idx], point],
-                symbolSize: 15,
+                symbolSize: 10,
               }
             }
             return null;
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
             color: '#0e0a03',
+            // color: '#0fbc79',
+            // borderColor: '#0a8e5c',
+            // borderWidth: 1.5,
           },
           label: {
             show: true,
@@ -317,8 +322,14 @@ function initChart(id, stock) {
             align: 'center',
             verticalAlign: 'middle',
             color: '#fff',
-            fontSize: 11,
+            fontSize: 6,
             formatter: 'B'
+            // show: true,
+            // color: '#ffffff',
+            // fontSize: 11,
+            // fontWeight: 11,
+            // position: 'inside',
+            // formatter: 'B'
           },
         }]
         : []),
@@ -329,6 +340,7 @@ function initChart(id, stock) {
       //     type: 'scatter',
       //     coordinateSystem: 'cartesian2d',
       //     symbol: 'rect',
+      //     z: 10,
       //     symbolSize: [15, 15],
       //     data: sell.map((point, idx) => {
       //       // console.log("idx：", idx);
@@ -342,15 +354,24 @@ function initChart(id, stock) {
       //       return null;
       //     }).filter(v => v !== null), // 过滤掉空值
       //     itemStyle: {
-      //       color: '#f3933e',
+      //       // color: '##0e0a03',
+      //       color: '#e74c3c',
+      //       borderColor: '#c0392b',
+      //       borderWidth: 1.5,
       //     },
       //     label: {
+      //       // show: true,
+      //       // position: 'inside',
+      //       // align: 'center',
+      //       // verticalAlign: 'middle',
+      //       // color: '#fff',
+      //       // fontSize: 11,
+      //       // formatter: 'S'
       //       show: true,
-      //       position: 'inside',
-      //       align: 'center',
-      //       verticalAlign: 'middle',
-      //       color: '#0e0a03',
+      //       color: '#ffffff',
       //       fontSize: 11,
+      //       fontWeight: 11,
+      //       position: 'inside',
       //       formatter: 'S'
       //     },
       //   }]
@@ -533,7 +554,7 @@ function fetchData() {
   }
   else if (strategyIndex.value === '2') {
     // url = 'http://120.27.208.55:10015/macd'; //MACD金叉
-    // url = 'http://172.16.32.93:10015/macd';
+    // url = 'http://172.16.33.222:10015/macd';
   }
   else if (strategyIndex.value === '3') {
     // url = 'http://120.27.208.55:10015/kdj'; //KDJ金叉
@@ -626,7 +647,7 @@ watch(stockData, () => {
       initChart(id, stock)
     })
   })
-})
+}, { immediate: true })
 </script>
 
 <template>
@@ -696,7 +717,7 @@ watch(stockData, () => {
     </div>
 
     <div class="grid-container">
-      <div class="chart-wrapper" v-for="(stock, idx) in stockData" :key="stock.idx">
+      <div class="chart-wrapper" v-for="(stock, idx) in stockData" :key="stock.name">
         <div class="chart" :id="`chart${idx}`"></div>
         <button class="fullscreen-btn" @click="fullscreen(idx)">全屏</button>
         <button class="fullscreen-btn" style="right: 80px" @click="exportChart(idx, stock.name)">导出</button>
