@@ -219,8 +219,8 @@ function initChart(stock) {
       }
     ],
     dataZoom: [
-      { type: 'inside', start: 93, end: 100, xAxisIndex: [0, 1] },
-      { type: 'slider', xAxisIndex: [0, 1], show: true, top: '93%', start: 93, end: 100 },
+      { type: 'inside', start: 90, end: 100, xAxisIndex: [0, 1] },
+      { type: 'slider', xAxisIndex: [0, 1], show: true, top: '93%', start: 90, end: 100 },
     ],
     series: [
       {
