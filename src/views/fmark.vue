@@ -6,6 +6,7 @@ import { upColor, upBorderColor, downColor, downBorderColor } from '@/stores/def
 import { MA } from '@/utils/MA';
 import useStockStore from '@/stores/stockStore';
 import { storeToRefs } from 'pinia';
+import { formatter } from 'element-plus';
 
 const store = useStockStore();
 const {
@@ -369,8 +370,10 @@ function initChart(stock) {
             // console.log("data.date[idx]:", data.date[idx]);
             if (point !== 0) {
               return {
-                value: [data.date[idx], parseFloat((point - 0.08).toFixed(2))],
+                // value: [data.date[idx], parseFloat((point - 0.08).toFixed(2))],
+                value: [data.date[idx], data.values[idx-1][1]-0.1],
                 symbolSize: 15,
+                // rawPoint:data.values[idx-1][1],
               }
             }
             return null;
@@ -387,6 +390,12 @@ function initChart(stock) {
             fontSize: 11,
             formatter: 'B'
           },
+          // tooltip:{
+          //   formatter:function(params){
+          //     const orgval = params.data.rawPoint;
+          //     return `买点：${orgval}`;
+          //   }
+          // }
         }]
         : [])
     ],
