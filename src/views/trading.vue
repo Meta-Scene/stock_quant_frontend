@@ -506,8 +506,8 @@ function fetchData() {
   }
   /* 接口 */
   // 技术指标
-  // const baseUrl = 'http://120.27.208.55:8080/api/'
-  const baseUrl = 'http://172.16.32.88:8080/api/'
+  const baseUrl = 'http://120.27.208.55:8080/api/'
+  // const baseUrl = 'http://172.16.32.88:8080/api/'
   let url = baseUrl + 'stock/data'; // 默认全部
   if (replayIndex.value === '1') {
     url = baseUrl + 'stock/data'; // 全部

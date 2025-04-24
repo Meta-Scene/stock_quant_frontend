@@ -38,16 +38,18 @@ onMounted(() => {
 function fetchDetail() {
   const params = new URLSearchParams();
   let code;
+  console.log("是否有：", fmark_total);
+
   if (fmark_total) {
     code = fmark_total.value[current_page.value - 1]
   }
   else {
     code = ts_code;
   }
-  params.append('ts_code', ts_code);
-  console.log("fmark_total.value", fmark_total.value);
-  console.log("current_page", current_page.value);
-  console.log("current_page-1", current_page.value - 1);
+  params.append('ts_code', code);
+  // console.log("fmark_total.value", fmark_total.value);
+  // console.log("current_page", current_page.value);
+  // console.log("current_page-1", current_page.value - 1);
 
 
   // console.log("检查：",fmark_total.value[current_page-1]);
@@ -130,13 +132,13 @@ function splitData(rawData) {
 
 function initChart(stock) {
   const chartContainer = document.getElementById('chart1');
-  // if(!chartContainer) return;
-  // const old = echarts.getInstanceByDom(chartContainer);
-  // if(old){
-  //   old.dispose();
-  // }
-  const data = splitData(stock.data)
+  if (!chartContainer) return;
+  const old = echarts.getInstanceByDom(chartContainer);
+  if (old) {
+    old.dispose();
+  }
   const chart = echarts.init(chartContainer);
+  const data = splitData(stock.data)
   const pctChg = data.values.map(v => v[4])
   const volumes = data.values.map(v => v[5])
   const buy = data.values.map(v => v[6])
@@ -217,8 +219,8 @@ function initChart(stock) {
       }
     ],
     dataZoom: [
-      { type: 'inside', start: 0, end: 100, xAxisIndex: [0, 1] },
-      { type: 'slider', xAxisIndex: [0, 1], show: true, top: '93%', start: 0, end: 100 },
+      { type: 'inside', start: 93, end: 100, xAxisIndex: [0, 1] },
+      { type: 'slider', xAxisIndex: [0, 1], show: true, top: '93%', start: 93, end: 100 },
     ],
     series: [
       {
@@ -433,12 +435,14 @@ function gotoPage() {
       </div>
     </div>
     <div class="controls">
-      <button @click="prevPage()">上一页</button>
+      <!-- <button @click="prevPage()">上一页</button>
       <span>第 <span>{{ current_page }}</span> /
         <span> {{ total_page }}</span> 页</span>
       <button @click="nextPage()">下一页</button>
       <input type="number" v-model="goto_input" style="width: 60px" placeholder="页码" />
-      <button @click="gotoPage()">跳转</button>
+      <button @click="gotoPage()">跳转</button> -->
+      <button class="btn left" @click="prevPage()">&lt;</button> <!-- ‹ 左箭头 -->
+      <button class="btn right" @click="nextPage()">&gt;</button> <!-- › 右箭头 -->
     </div>
   </div>
 </template>
@@ -489,33 +493,38 @@ body {
 }
 
 /* 分页栏 */
-.controls {
-  flex-shrink: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 6px 10px;
-  gap: 10px;
-  height: 40px;
-  font-size: 14px;
-  background-color: #ffffff;
-  border-top: 1px solid #eee;
-}
-
-.controls button {
-  padding: 4px 10px;
-  font-size: 13px;
+.btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 54px;
+  height: 54px;
+  font-size: 32px;
+  font-weight: lighter;
+  color: #fffbfb;
+  background: rgba(190, 188, 188, 0.35);
+  /* backdrop-filter: blur(10px); */
+  border: 0;
+  border-radius: 50% !important;
   cursor: pointer;
-  border: 1px solid #ccc;
-  background-color: #f5f5f5;
-  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.controls input {
-  height: 26px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
+.btn:hover {
+  background: rgba(190, 188, 188, 0.35);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.12);
+}
+
+.left {
+  left: 30px;
+}
+
+.right {
+  right: 30px;
 }
 
 .chart-wrapper .chart {
