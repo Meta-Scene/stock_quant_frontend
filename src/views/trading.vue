@@ -8,17 +8,7 @@ import { formatDate, redictToNewDay } from '@/utils/dateUtils';
 import { splitData } from '@/utils/splitData';
 import { MA } from '@/utils/MA';
 import { pageSize, upColor, upBorderColor, downColor, downBorderColor, strategies, conditions, analysis } from '@/stores/define'
-const isDarkMode = ref(false)//深色模式
-function toggleDarkMode() {
-  isDarkMode.value = !isDarkMode.value
-  document.documentElement.classList.toggle('dark', isDarkMode.value)
-  // 更新图表样式
-  nextTick(() => {
-    Object.values(charts.value).forEach(chart => {
-      chart?.setOption(getChartThemeOption(), true)
-    })
-  })
-}
+
 const router = useRouter();
 const store = useStockStore();
 const {
@@ -89,8 +79,6 @@ function initChart(id, stock) {
 
   const chart = echarts.init(el);
   const data = splitData(stock.data)
-  // const chart = echarts.init(document.getElementById(id))
-
   // 提取涨跌幅,成交量,买点,半年线,年线,股票名称
   const pctChg = data.values.map(v => v[4]);
   const volumes = data.values.map(v => v[5]);
@@ -231,7 +219,6 @@ function initChart(id, stock) {
     series: [
       {
         name: '日K',
-        // z: 10,
         type: 'candlestick',
         barWidth: '50%',
         data: data.values.map(v => v.slice(0, 4)), // [open, high, low, close]
@@ -321,7 +308,6 @@ function initChart(id, stock) {
       ...(buy.length > 0 && buy.some(point => point !== 0)
         ? [{
           name: '买点',
-          // z: 1,
           type: 'scatter',
           coordinateSystem: 'cartesian2d',
           symbol: 'rect',
@@ -339,9 +325,6 @@ function initChart(id, stock) {
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
             color: '#0e0a03',
-            // color: '#0fbc79',
-            // borderColor: '#0a8e5c',
-            // borderWidth: 1.5,
           },
           label: {
             show: true,
@@ -351,12 +334,6 @@ function initChart(id, stock) {
             color: '#fff',
             fontSize: 11,
             formatter: 'B'
-            // show: true,
-            // color: '#ffffff',
-            // fontSize: 11,
-            // fontWeight: 11,
-            // position: 'inside',
-            // formatter: 'B'
           },
         }]
         : []),
@@ -424,22 +401,6 @@ function fullscreen(idx) {
     document.exitFullscreen?.()
   }
 }
-// function fullscreen(idx) {
-//   const wrapper = document.querySelectorAll('.chart-wrapper')[idx];
-//   const chart = charts.value[`chart${idx}`];
-//   if (!document.fullscreenElement) {
-//     wrapper.classList.add('is-fullscreen');
-//     wrapper.requestFullscreen?.().then(() => {
-//       chart?.resize();
-//       isFullscreen.value = true;
-//     });
-//   } else {
-//     document.exitFullscreen?.().then(() => {
-//       isFullscreen.value = false;
-//     });
-//   }
-// }
-
 
 function exportChart(idx, name) {
   const chart = charts.value[`chart${idx}`]
@@ -501,7 +462,6 @@ function showToast(message) {
   }, 1500)
 }
 
-
 function handleFullscreenChange() {
   isFullscreen.value = !!document.fullscreenElement
   document.querySelectorAll('.chart-wrapper').forEach((wrapper) => {
@@ -526,29 +486,6 @@ function handleFullscreenChange() {
     // if (btn) btn.textContent = isFullscreen ? '×' : '全屏'
   })
 }
-
-// function handleFullscreenChange() {
-//   const now = !!document.fullscreenElement;
-//   isFullscreen.value = now; // 自动同步
-
-//   document.querySelectorAll('.chart-wrapper').forEach((wrapper) => {
-//     const chartDiv = wrapper.querySelector('.chart');
-//     const chart = charts.value[chartDiv.id];
-
-//     if (!now) {
-//       wrapper.classList.remove('is-fullscreen');
-//       wrapper.style.width = '';
-//       wrapper.style.height = '';
-//       chartDiv.style.width = '100%';
-//       chartDiv.style.height = '100%';
-//     } else {
-//       wrapper.classList.add('is-fullscreen');
-//     }
-
-//     setTimeout(() => chart?.resize(), 100);
-//   });
-// }
-
 
 function prevPage() {
   if (currentPage.value > 1) {
@@ -815,7 +752,7 @@ watch(stockData, () => {
               <el-menu-item index="1">人气排名</el-menu-item>
               <el-menu-item index="2">热门板块</el-menu-item>
               <el-menu-item index="3">强势板块</el-menu-item>
-              <el-menu-item index="4">自选股</el-menu-item>
+              <!-- <el-menu-item index="4">自选股</el-menu-item> -->
             </el-sub-menu>
           </el-menu>
         </div>
@@ -838,11 +775,6 @@ watch(stockData, () => {
               <el-menu-item index="12">🔴 财务估值</el-menu-item>
             </el-sub-menu>
           </el-menu>
-        </div>
-        <div class="column">
-          <button @click="toggleDarkMode" style="margin-left: 20px">
-            {{ isDarkMode ? '🌙 暗色' : '☀️ 亮色' }}
-          </button>
         </div>
       </div>
     </div>
@@ -1121,75 +1053,5 @@ body {
   padding: 2px 6px;
   border-radius: 4px;
   border: 1px solid #ccc;
-}
-
-/* 暗色 */
-.dark html,
-.dark body {
-  background-color: #1e1e1e;
-  color: #e0e0e0;
-}
-
-/* 顶部栏深色 */
-.dark .top-bar {
-  background-color: #2a2a2a;
-  border-bottom: 1px solid #444;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
-}
-
-/* 顶部标题 */
-.dark .title-container h1 {
-  color: #eee;
-}
-
-/* 下拉菜单 */
-.dark .strategy-menu .el-sub-menu__title {
-  color: #ccc;
-}
-
-.dark .el-menu--horizontal>.el-menu-item.is-active,
-.dark .el-menu--horizontal>.el-sub-menu.is-active .el-sub-menu__title {
-  background-color: #333;
-  color: #fff !important;
-}
-
-.dark .el-menu--horizontal>.el-menu-item:hover,
-.dark .el-menu--horizontal>.el-sub-menu:hover .el-sub-menu__title {
-  background-color: #444;
-  color: #fff;
-}
-
-/* 图表外壳 */
-.dark .chart-wrapper {
-  background-color: #2a2a2a;
-  box-shadow: 0 1px 6px rgba(255, 255, 255, 0.05);
-}
-
-/* 全屏时图表背景 */
-.dark .chart-wrapper.is-fullscreen {
-  background-color: #1e1e1e;
-}
-
-/* 分页栏 */
-.dark .controls {
-  background-color: #2a2a2a;
-  border-top: 1px solid #555;
-}
-
-.dark .controls button {
-  background-color: #3a3a3a;
-  border: 1px solid #555;
-  color: #ccc;
-}
-
-.dark .controls input {
-  background-color: #2e2e2e;
-  color: #ccc;
-  border: 1px solid #555;
-}
-
-/* 小图标 hover 色 */
-.dark .fullscreen-btn:hover {
-  color: #ffffff;
 }
 </style>
