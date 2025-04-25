@@ -6,7 +6,6 @@ import { upColor, upBorderColor, downColor, downBorderColor } from '@/stores/def
 import { MA } from '@/utils/MA';
 import useStockStore from '@/stores/stockStore';
 import { storeToRefs } from 'pinia';
-import { formatter } from 'element-plus';
 
 const store = useStockStore();
 const {
@@ -30,7 +29,7 @@ onMounted(() => {
     fmark_total,
     (val) => {
       if (val.length > 0) {
-        current_page.value=find_current_code()+1
+        current_page.value = find_current_code() + 1
         fetchDetail();
       }
     },
@@ -129,7 +128,7 @@ function splitData(rawData) {
   values[i][5] 成交量
   values[i][6] 买点
   values[i][7] 顶底分型
-
+  values[i][10]名称
   */
 }
 
@@ -371,9 +370,8 @@ function initChart(stock) {
             if (point !== 0) {
               return {
                 // value: [data.date[idx], parseFloat((point - 0.08).toFixed(2))],
-                value: [data.date[idx], data.values[idx-1][1]-0.1],
+                value: [data.date[idx], data.values[idx][2] - 0.3],
                 symbolSize: 15,
-                // rawPoint:data.values[idx-1][1],
               }
             }
             return null;
@@ -390,18 +388,11 @@ function initChart(stock) {
             fontSize: 11,
             formatter: 'B'
           },
-          // tooltip:{
-          //   formatter:function(params){
-          //     const orgval = params.data.rawPoint;
-          //     return `买点：${orgval}`;
-          //   }
-          // }
         }]
         : [])
     ],
   });
 }
-// const ts_codes = ['000008.SZ', '000526.SZ', '000729.SZ', '000733.SZ', '000822.SZ', '001317.SZ', '002084.SZ', '002306.SZ', '002365.SZ', '002371.SZ', '002800.SZ', '300106.SZ', '300203.SZ', '300240.SZ', '300346.SZ', '300395.SZ', '300851.SZ', '300995.SZ', '301052.SZ', '600012.SH', '600127.SH'];
 
 function updateRouteWithCode() {
   const code = fmark_total.value[current_page.value - 1]
@@ -424,18 +415,6 @@ function nextPage() {
   }
 }
 
-function gotoPage() {
-  const val = parseInt(goto_input.value)
-  if (val >= 1 && val <= total_page.value) {
-    current_page.value = val
-    updateRouteWithCode();
-    fetchDetail();
-  } else {
-    alert('页码无效')
-  }
-}
-
-
 function find_current_code() {
   for (let i = 0; i < fmark_total.value.length; i++) {
     if (fmark_total.value[i] == ts_code) {
@@ -443,30 +422,6 @@ function find_current_code() {
     }
   }
 }
-
-// function prevPage() {
-//   if (current_page.value > 1) {
-//     current_page.value--;
-//     fetchDetail();
-//   }
-// }
-
-// function nextPage() {
-//   if (current_page.value < total_page.value) {
-//     current_page.value++;
-//     fetchDetail();
-//   }
-// }
-const goto_input = ref('');
-// function gotoPage() {
-//   const val = parseInt(goto_input.value)
-//   if (val >= 1 && val <= total_page.value) {
-//     current_page.value = val
-//     fetchDetail();
-//   } else {
-//     alert('页码无效')
-//   }
-// }
 
 </script>
 
@@ -477,23 +432,13 @@ const goto_input = ref('');
         <div class="chart" id="chart1"></div>
       </div>
     </div>
-    <!-- <div class="controls"> -->
-    <!-- <button @click="prevPage()">上一页</button>
-      <span>第 <span>{{ current_page }}</span> /
-        <span> {{ total_page }}</span> 页</span>
-      <button @click="nextPage()">下一页</button>
-      <input type="number" v-model="goto_input" style="width: 60px" placeholder="页码" />
-      <button @click="gotoPage()">跳转</button> -->
-    <button class="btn left" @click="prevPage()">&lt;</button> <!-- ‹ 左箭头 -->
-    <button class="btn right" @click="nextPage()">&gt;</button> <!-- › 右箭头 -->
-    <!-- </div> -->
+    <button class="btn left" @click="prevPage()">&lt;</button>
+    <button class="btn right" @click="nextPage()">&gt;</button>
   </div>
 </template>
 
 <style scoped>
 /* 图表 */
-
-
 html,
 body {
   margin: 0;
@@ -532,7 +477,6 @@ body {
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   font-size: 14px;
-  /* padding: 6px 10px; */
 }
 
 .chart-container,
@@ -547,14 +491,10 @@ body {
   border-radius: 8px;
 }
 
-/* 分页栏 */
+/* 分页按钮 */
 .btn {
   position: absolute;
-  /* top: 50%; */
   top: calc(50% - 27px);
-  /* 避免 transform */
-  transform: none;
-  /* transform: translateY(-50%); */
   overflow: hidden;
   width: 54px;
   height: 54px;
@@ -562,7 +502,6 @@ body {
   font-weight: lighter;
   color: #fffbfb;
   background: rgba(190, 188, 188, 0.35);
-  /* backdrop-filter: blur(10px); */
   border: 0;
   border-radius: 50% !important;
   cursor: pointer;
@@ -573,15 +512,12 @@ body {
 }
 
 .btn {
-  /* 保证按钮不越界 */
   box-sizing: border-box;
   max-height: 100vh;
 }
 
 .btn:hover {
-  background: rgba(190, 188, 188, 0.35);
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.12);
+  background: rgba(212, 210, 210, 0.35);
 }
 
 .left {
