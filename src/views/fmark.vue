@@ -51,9 +51,6 @@ function fetchDetail() {
   params.append('ts_code', code);
   // console.log("fmark_total.value", fmark_total.value);
   // console.log("current_page", current_page.value);
-  // console.log("current_page-1", current_page.value - 1);
-
-
   // console.log("检查：",fmark_total.value[current_page-1]);
 
   const url = 'http://120.27.208.55:10015/stock_fmark'
@@ -83,11 +80,11 @@ function fetchDetail() {
           d[3],  // high
           d[4],  // low
           d[5],  // close
-          d[7],  // 涨跌幅
-          d[8],  // 成交量
-          d[9],  // 买点
-          d[10], // fmark
-          d[13], // 股票名称
+          d[6],  // 涨跌幅
+          d[7],  // 成交量
+          d[8],  // 买点
+          d[9], // fmark
+          d[12], // 股票名称
         ])
         return { name, data: kline, true_name }
       })
@@ -450,7 +447,6 @@ body {
   color: #333;
 
 }
-
 
 #f {
   height: 98vh;

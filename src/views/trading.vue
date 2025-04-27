@@ -71,7 +71,7 @@ function initChart(id, stock) {
     console.warn(`图表容器未找到: ${id}`);
     return;
   }
-  // 检查并销毁已有实例（更保险）
+  // 检查并销毁已有实例
   const existingInstance = echarts.getInstanceByDom(el);
   if (existingInstance) {
     existingInstance.dispose();
@@ -541,8 +541,6 @@ const handleReplay = (key, keyPath) => {
   strategyIndex.value = '0';
   analysisIndex.value = '0';
   stockSearch.value = '';
-  // stockName = '';
-  // selectedDate.value = '2025-03-31';
   selectedDate.value = redictToNewDay();
   currentPage.value = 1;
   fetchData();
@@ -557,22 +555,17 @@ const handleAnalysis = (key, keyPath) => {
   fetchData();
 }
 
-
 function fetchData() {
   /* 传参 */
   const params = new URLSearchParams();
   // console.log("股票代码：", stockCode.value, "类型", typeof (stockCode.value));
   // console.log("replayindex：", replayIndex.value, "类型", typeof (replayIndex.value), "strategyIndex:", strategyIndex.value);
   // 技术指标
-  if (replayIndex.value === "1" || replayIndex.value === "2" || replayIndex.value === "3" || replayIndex.value === "4" || replayIndex.value === "5") {
+  if (replayIndex.value === "1" || replayIndex.value === "2" || replayIndex.value === "3" || replayIndex.value === "4" || replayIndex.value === "5" || replayIndex.value === "6" || replayIndex.value === "7") {
     console.log("技术指标");
-    params.append('pageNum', currentPage.value);
-    // if (selectedDate.value) {
-    params.append('tradeDate', formatDate(selectedDate.value));
-    // selectedDate.value = formatDate(selectedDate.value)
-    // } else {
-    //   selectedDate.value = "2025-03-31";//TODO:要改标当前日期方法，后端改？传空值也可查询
-    // }
+    params.append('page', currentPage.value);
+    params.append('trade_date', formatDate(selectedDate.value));
+    params.append('replay_index', replayIndex.value);
   }
   // 策略类型
   if (strategyIndex.value === "1" || strategyIndex.value === "2" || strategyIndex.value === "3" || strategyIndex.value === "4" || strategyIndex.value === "5") {
@@ -587,28 +580,35 @@ function fetchData() {
 
   /* 接口 */
   // 技术指标
-  const baseUrl = 'http://120.27.208.55:8080/api/'
+  // const baseUrl = 'http://120.27.208.55:8080/api/stock'
+  const url = 'http://120.27.208.55:8080/api/stock'
   // const baseUrl = 'http://172.16.32.88:8080/api/'
-  let url = baseUrl + 'stock/data'; // 默认全部
-  if (replayIndex.value === '1') {
-    url = baseUrl + 'stock/data'; // 全部
-  }
-  else if (replayIndex.value === '2') {
-    url = baseUrl + 'stock/limit-up'; // 涨停
-  }
-  else if (replayIndex.value === '3') {
-    url = baseUrl + 'stock/limit-down'; // 跌停
-  }
-  else if (replayIndex.value === '4') {
-    url = baseUrl + 'stock/half-year-line';//半年线
-    // url = 'http://172.16.32.88:8080/api/stock/half-year-line';
-  }
-  else if (replayIndex.value === '5') {
-    url = baseUrl + 'stock/year-line';//年线
-    // url = 'http://172.16.32.88:8080/api/stock/year-line';
-  }
+  // let url = baseUrl + 'stock/data'; // 默认全部
+  // if (replayIndex.value === '1') {
+  //   url = baseUrl + 'stock/data'; // 全部
+  // }
+  // else if (replayIndex.value === '2') {
+  //   url = baseUrl + 'stock/limit-up'; // 涨停
+  // }
+  // else if (replayIndex.value === '3') {
+  //   url = baseUrl + 'stock/limit-down'; // 跌停
+  // }
+  // else if (replayIndex.value === '4') {
+  //   url = baseUrl + 'stock/half-year-line';//半年线
+  // }
+  // else if (replayIndex.value === '5') {
+  //   url = baseUrl + 'stock/year-line';//年线
+  // }
+  // else if (replayIndex.value === '6') {
+  //   // url = baseUrl + 'stock/outperform';//强于大盘
+  //   url = 'http://172.16.32.88:8080/api/stock/outperform';
+  // }
+  // else if (replayIndex.value === '7') {
+  //   // url = baseUrl + 'stock/underperform';//弱于大盘
+  //   url = 'http://172.16.32.88:8080/api/stock/underperform';
+  // }
   // 策略类型
-  else if (strategyIndex.value === '1') {
+  if (strategyIndex.value === '1') {
     url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
     // url = 'http://172.16.32.93:10015/stock_bay';
   }
@@ -660,13 +660,13 @@ function fetchData() {
           d[3],  // high
           d[4],  // low
           d[5],  // close
-          d[7],  // 涨跌幅
-          d[8],  // 成交量
-          d[9],  // 买点
-          d[10], // 半年线
-          d[11], // 年线
-          d[12], // 股票名称
-          // d[13], // 卖点
+          d[6],  // 涨跌幅
+          d[7],  // 成交量
+          d[8],  // 买点
+          d[9], // 半年线
+          d[10], // 年线
+          d[11], // 股票名称
+          // d[12], // 卖点
         ])
         // console.log("11111111111111111111111", kline[11]);
         return { name, data: kline, true_name }
