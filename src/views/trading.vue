@@ -511,9 +511,10 @@ function gotoPage() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   selectedDate.value = redictToNewDay();
+  await store.loadFmarkTotal(); // <<< 加上这句，从IDB加载 fmark_total
   // fetchData();
 })
 
@@ -565,7 +566,7 @@ function fetchData() {
     console.log("技术指标");
     params.append('page', currentPage.value);
     params.append('trade_date', formatDate(selectedDate.value));
-    params.append('replay_index', replayIndex.value);
+    // params.append('replay_index', replayIndex.value);
   }
   // 策略类型
   if (strategyIndex.value === "1" || strategyIndex.value === "2" || strategyIndex.value === "3" || strategyIndex.value === "4" || strategyIndex.value === "5") {
@@ -581,7 +582,7 @@ function fetchData() {
   /* 接口 */
   // 技术指标
   // const baseUrl = 'http://120.27.208.55:8080/api/stock'
-  const url = 'http://120.27.208.55:8080/api/stock'
+  let url = `http://172.16.32.88:8080/api/stock_data/${replayIndex.value}`
   // const baseUrl = 'http://172.16.32.88:8080/api/'
   // let url = baseUrl + 'stock/data'; // 默认全部
   // if (replayIndex.value === '1') {
@@ -642,7 +643,7 @@ function fetchData() {
       }
       return response.json();
     })
-    .then(data => {
+    .then(async data => {
       console.log('成功:', data);
       const grid = data.grid_data || [];
 
@@ -652,6 +653,7 @@ function fetchData() {
       }
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
+        // const true_name = itemList[0][11];//股票名称
         const true_name = itemList[0][12];//股票名称
         // console.log("truename", true_name);
         const kline = itemList.map(d => [
@@ -660,12 +662,18 @@ function fetchData() {
           d[3],  // high
           d[4],  // low
           d[5],  // close
-          d[6],  // 涨跌幅
-          d[7],  // 成交量
-          d[8],  // 买点
-          d[9], // 半年线
-          d[10], // 年线
-          d[11], // 股票名称
+          // d[6],  // 涨跌幅
+          // d[7],  // 成交量
+          // d[8],  // 买点
+          // d[9], // 半年线
+          // d[10], // 年线
+          // d[11], // 股票名称
+          d[7],  // 涨跌幅
+          d[8],  // 成交量
+          d[9],  // 买点
+          d[10], // 半年线
+          d[11], // 年线
+          d[12], // 股票名称
           // d[12], // 卖点
         ])
         // console.log("11111111111111111111111", kline[11]);
@@ -676,6 +684,7 @@ function fetchData() {
       // 把全部的股票代码拿到
       if (data.ts_codes) {
         fmark_total.value = data.ts_codes;
+        await store.saveFmarkTotal();  // <<< 保存到 IndexedDB
         // 在 fetchData 成功后，确保数据同步到本地存储
         // localStorage.setItem('fmark_total', JSON.stringify(fmark_total.value));
         console.log("first get fmark_total:", fmark_total.value);

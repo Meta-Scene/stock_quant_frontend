@@ -20,21 +20,21 @@ const route = useRoute();
 const router = useRouter();
 const ts_code = route.query.stockCode;
 // console.log(`股票代码: ${ts_code}`);
-const current_page = ref(find_current_code() + 1);
-const total_page = ref(fmark_total.value.length);
+// const current_page = ref(find_current_code() + 1);
+// const total_page = ref(fmark_total.value.length);
+const current_page = ref(1); // 初始是第一页，先别用 find_current_code
+const total_page = ref(0);
 
-
-onMounted(() => {
-  watch(
-    fmark_total,
-    (val) => {
-      if (val.length > 0) {
-        current_page.value = find_current_code() + 1
-        fetchDetail();
-      }
-    },
-    { immediate: true }
-  );
+onMounted(async () => {
+  await store.loadFmarkTotal();  // 直接等它加载完 fmark_total
+  if (fmark_total.value.length > 0) {
+    //111
+    total_page.value = fmark_total.value.length;
+    current_page.value = find_current_code() + 1;
+    await fetchDetail();
+  } else {
+    console.warn('fmark_total为空，无法定位股票');
+  }
 })
 
 function fetchDetail() {
@@ -71,6 +71,7 @@ function fetchDetail() {
       const grid = data.data || [];
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
+        // const true_name = itemList[0][12];//股票名称
         const true_name = itemList[0][13];//股票名称
         // console.log("true_name", true_name);
 
@@ -80,11 +81,16 @@ function fetchDetail() {
           d[3],  // high
           d[4],  // low
           d[5],  // close
-          d[6],  // 涨跌幅
-          d[7],  // 成交量
-          d[8],  // 买点
-          d[9], // fmark
-          d[12], // 股票名称
+          // d[6],  // 涨跌幅
+          // d[7],  // 成交量
+          // d[8],  // 买点
+          // d[9], // fmark
+          // d[12], // 股票名称
+          d[7],  // 涨跌幅
+          d[8],  // 成交量
+          d[9],  // 买点
+          d[10], // fmark
+          d[13], // 股票名称
         ])
         return { name, data: kline, true_name }
       })
