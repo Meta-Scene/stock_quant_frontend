@@ -11,6 +11,7 @@ import { pageSize, upColor, upBorderColor, downColor, downBorderColor, strategie
 
 const router = useRouter();
 const store = useStockStore();
+store.init()
 const {
   stockNumber,
   stockData,
@@ -24,7 +25,7 @@ const {
   fmark_total,
   favorites
 } = storeToRefs(store);
-const toggleFavorite = (stock) => store.toggleFavorite(stock.name)
+const toggleFavorite = (name) => store.toggleFavorite(name)
 const isFavorited = (name) => store.isFavorited(name)
 
 const totalPage = computed(() => {
@@ -427,7 +428,7 @@ async function copyChartToClipboard(idx) {
     showToast('复制成功')
   } catch (err) {
     console.error('复制失败:', err)
-    alert('复制失败，当前浏览器可能不支持图像剪贴板写入')
+    alert('复制失败，当前操作系统不支持图像剪贴板写入')
   }
 }
 
@@ -573,7 +574,7 @@ function fetchData() {
     params.append('page', currentPage.value);
     if (stockSearch.value.trim() == "") {
       // if (stockName == '') {
-      params.append('date', formatDate(selectedDate.value));
+      params.append('trade_date', formatDate(selectedDate.value));
     }
     params.append('ts_code', stockSearch.value);
     // console.log("url正确");
@@ -581,54 +582,29 @@ function fetchData() {
 
   /* 接口 */
   // 技术指标
-  // const baseUrl = 'http://120.27.208.55:8080/api/stock'
-  let url = `http://172.16.32.88:8080/api/stock_data/${replayIndex.value}`
-  // const baseUrl = 'http://172.16.32.88:8080/api/'
-  // let url = baseUrl + 'stock/data'; // 默认全部
-  // if (replayIndex.value === '1') {
-  //   url = baseUrl + 'stock/data'; // 全部
-  // }
-  // else if (replayIndex.value === '2') {
-  //   url = baseUrl + 'stock/limit-up'; // 涨停
-  // }
-  // else if (replayIndex.value === '3') {
-  //   url = baseUrl + 'stock/limit-down'; // 跌停
-  // }
-  // else if (replayIndex.value === '4') {
-  //   url = baseUrl + 'stock/half-year-line';//半年线
-  // }
-  // else if (replayIndex.value === '5') {
-  //   url = baseUrl + 'stock/year-line';//年线
-  // }
-  // else if (replayIndex.value === '6') {
-  //   // url = baseUrl + 'stock/outperform';//强于大盘
-  //   url = 'http://172.16.32.88:8080/api/stock/outperform';
-  // }
-  // else if (replayIndex.value === '7') {
-  //   // url = baseUrl + 'stock/underperform';//弱于大盘
-  //   url = 'http://172.16.32.88:8080/api/stock/underperform';
-  // }
+  let url = `http://120.27.208.55:10017/api/stock_data/${replayIndex.value}`
   // 策略类型
-  if (strategyIndex.value === '1') {
-    url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
+  if (strategyIndex.value !== '0') {
+    // url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
+    url = `http://120.27.208.55:10017/api/stock_analysis/${strategyIndex.value}`;
     // url = 'http://172.16.32.93:10015/stock_bay';
   }
-  else if (strategyIndex.value === '2') {
-    // url = 'http://120.27.208.55:10015/macd'; //MACD金叉
-    // url = 'http://172.16.33.222:10015/macd';
-  }
-  else if (strategyIndex.value === '3') {
-    // url = 'http://120.27.208.55:10015/kdj'; //KDJ金叉
-    // url = 'http://172.16.32.93:10015/kdj';
-  }
-  else if (strategyIndex.value === '4') {
-    // url = 'http://120.27.208.55:10015/low_in'; //低位资金净流入
-    // url = 'http://172.16.32.93:10015/low_in';
-  }
-  else if (strategyIndex.value === '5') {
-    // url = 'http://120.27.208.55:10015/high_out'; //高位资金净流出
-    // url = 'http://172.16.32.93:10015/high_out';
-  }
+  // else if (strategyIndex.value === '2') {
+  //   // url = 'http://120.27.208.55:10015/macd'; //MACD金叉
+  //   // url = 'http://172.16.33.222:10015/macd';
+  // }
+  // else if (strategyIndex.value === '3') {
+  //   // url = 'http://120.27.208.55:10015/kdj'; //KDJ金叉
+  //   // url = 'http://172.16.32.93:10015/kdj';
+  // }
+  // else if (strategyIndex.value === '4') {
+  //   // url = 'http://120.27.208.55:10015/low_in'; //低位资金净流入
+  //   // url = 'http://172.16.32.93:10015/low_in';
+  // }
+  // else if (strategyIndex.value === '5') {
+  //   // url = 'http://120.27.208.55:10015/high_out'; //高位资金净流出
+  //   // url = 'http://172.16.32.93:10015/high_out';
+  // }
 
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
@@ -653,8 +629,8 @@ function fetchData() {
       }
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
-        // const true_name = itemList[0][11];//股票名称
-        const true_name = itemList[0][12];//股票名称
+        const true_name = itemList[0][11];//股票名称
+        // const true_name = itemList[0][12];//股票名称
         // console.log("truename", true_name);
         const kline = itemList.map(d => [
           d[1],  // 日期
@@ -662,18 +638,18 @@ function fetchData() {
           d[3],  // high
           d[4],  // low
           d[5],  // close
-          // d[6],  // 涨跌幅
-          // d[7],  // 成交量
-          // d[8],  // 买点
-          // d[9], // 半年线
-          // d[10], // 年线
-          // d[11], // 股票名称
-          d[7],  // 涨跌幅
-          d[8],  // 成交量
-          d[9],  // 买点
-          d[10], // 半年线
-          d[11], // 年线
-          d[12], // 股票名称
+          d[6],  // 涨跌幅
+          d[7],  // 成交量
+          d[8],  // 买点
+          d[9], // 半年线
+          d[10], // 年线
+          d[11], // 股票名称
+          // d[7],  // 涨跌幅
+          // d[8],  // 成交量
+          // d[9],  // 买点
+          // d[10], // 半年线
+          // d[11], // 年线
+          // d[12], // 股票名称
           // d[12], // 卖点
         ])
         // console.log("11111111111111111111111", kline[11]);
@@ -761,7 +737,7 @@ watch(stockData, () => {
               <el-menu-item index="1">人气排名</el-menu-item>
               <el-menu-item index="2">热门板块</el-menu-item>
               <el-menu-item index="3">强势板块</el-menu-item>
-              <!-- <el-menu-item index="4">自选股</el-menu-item> -->
+              <el-menu-item index="4">自选股</el-menu-item>
             </el-sub-menu>
           </el-menu>
         </div>
@@ -844,7 +820,7 @@ watch(stockData, () => {
             d="M831.6 64.5H384.1c-35.2 0-63.9 28.8-63.9 63.9v63.9h63.9v-63.9h447.5v575.4h-63.9v63.9h63.9c35.2 0 63.9-28.8 63.9-63.9V128.4c0.1-35.1-28.7-63.9-63.9-63.9z"
             p-id="2051"></path>
         </svg>
-        <svg class="fullscreen-btn icon" style="right: 91px" @click="toggleFavorite(stock)"
+        <svg class="fullscreen-btn icon" style="right: 91px" @click="toggleFavorite(stock.name)"
           :fill="isFavorited(stock.name) ? '#e91e63' : '#999'" viewBox="0 0 1024 1024" width="20" height="20">
           <path
             d="M480 480V160a32 32 0 1164 0v320h320a32 32 0 110 64H544v320a32 32 0 11-64 0V544H160a32 32 0 110-64h320z" />

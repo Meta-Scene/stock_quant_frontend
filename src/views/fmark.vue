@@ -8,12 +8,15 @@ import useStockStore from '@/stores/stockStore';
 import { storeToRefs } from 'pinia';
 
 const store = useStockStore();
+store.init()
 const {
   fmark_total,
+  favorites
 } = storeToRefs(store);
 console.log("fmark_total:", fmark_total.value);
 // console.log("fmark_total:", fmark_total.value);
-
+const toggleFavorite = (name) => store.toggleFavorite(name)
+const isFavorited = (name) => store.isFavorited(name)
 
 defineProps({ name: 'StockFmark' });
 const route = useRoute();
@@ -53,6 +56,7 @@ function fetchDetail() {
   // console.log("current_page", current_page.value);
   // console.log("检查：",fmark_total.value[current_page-1]);
 
+  // const url = 'http://172.16.32.93:10015/stock_fmark'
   const url = 'http://120.27.208.55:10015/stock_fmark'
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
@@ -183,7 +187,7 @@ function initChart(stock) {
     xAxis: [
       {
         data: data.date,
-        boundaryGap: false,
+        boundaryGap: true,
         axisLine: { onZero: false },
         splitLine: { show: false },
         min: 'dataMin',
@@ -193,7 +197,7 @@ function initChart(stock) {
         type: 'category',
         gridIndex: 1,
         data: data.date,
-        boundaryGap: false,
+        boundaryGap: true,
         axisLine: { onZero: false },
         axisTick: { show: false },
         splitLine: { show: false },
@@ -430,6 +434,17 @@ function find_current_code() {
 
 <template>
   <div id="f">
+    <!-- <svg class="fullscreen-btn icon" style="right: 91px" @click="toggleFavorite(ts_code)"
+      :fill="isFavorited(ts_code) ? '#e91e63' : '#999'" viewBox="0 0 1024 1024" width="20" height="20">
+      <path
+        d="M480 480V160a32 32 0 1164 0v320h320a32 32 0 110 64H544v320a32 32 0 11-64 0V544H160a32 32 0 110-64h320z" />
+    </svg> -->
+    <svg class="fullscreen-btn icon" @click="toggleFavorite(fmark_total[current_page - 1])"
+      :fill="isFavorited(fmark_total[current_page - 1]) ? '#e91e63' : '#999'" viewBox="0 0 1024 1024" width="30"
+      height="30">
+      <path
+        d="M480 480V160a32 32 0 1164 0v320h320a32 32 0 110 64H544v320a32 32 0 11-64 0V544H160a32 32 0 110-64h320z" />
+    </svg>
     <div class="chart-container">
       <div class="chart-wrapper">
         <div class="chart" id="chart1"></div>
@@ -441,6 +456,14 @@ function find_current_code() {
 </template>
 
 <style scoped>
+.fullscreen-btn {
+  position: absolute;
+  top: 10px;
+  right: 50px;
+  /* padding: 4px 8px; */
+  z-index: 10;
+}
+
 /* 图表 */
 html,
 body {
