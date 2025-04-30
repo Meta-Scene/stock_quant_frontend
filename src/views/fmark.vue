@@ -296,7 +296,7 @@ function initChart(stock) {
           width: 1.5
         },
         symbol: 'circle',
-        symbolSize: 5,
+        symbolSize: 3,
         itemStyle: {
           color: '#ff6347',
         },
@@ -311,7 +311,7 @@ function initChart(stock) {
           width: 1.5,
         },
         symbol: 'circle',
-        symbolSize: 5,
+        symbolSize: 3,
         itemStyle: {
           color: '#4682b4',
         },
@@ -326,7 +326,7 @@ function initChart(stock) {
           width: 1.5,
         },
         symbol: 'circle',
-        symbolSize: 5,
+        symbolSize: 3,
         itemStyle: {
           color: '#ff77ff',
         },
@@ -341,7 +341,7 @@ function initChart(stock) {
           width: 1.5,
         },
         symbol: 'circle',
-        symbolSize: 5,
+        symbolSize: 3,
         itemStyle: {
           color: '#581845',
         },
