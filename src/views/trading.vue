@@ -532,7 +532,7 @@ const handleStrategy = (key, keyPath) => {
   stockSearch.value = '';
   // stockName = '';
   // selectedDate.value = '';
-  selectedDate.value = redictToNewDay();
+  // selectedDate.value = redictToNewDay();
   currentPage.value = 1;
   fetchData();
 }
@@ -543,7 +543,7 @@ const handleReplay = (key, keyPath) => {
   strategyIndex.value = '0';
   analysisIndex.value = '0';
   stockSearch.value = '';
-  selectedDate.value = redictToNewDay();
+  // selectedDate.value = redictToNewDay();
   currentPage.value = 1;
   fetchData();
 }
@@ -582,11 +582,11 @@ function fetchData() {
 
   /* 接口 */
   // 技术指标
-  let url = `http://120.27.208.55:10017/api/stock_data/${replayIndex.value}`
+  let url = `http://120.27.208.55:10003/api/stock_data/${replayIndex.value}`
   // 策略类型
   if (strategyIndex.value !== '0') {
     // url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
-    url = `http://120.27.208.55:10017/api/stock_analysis/${strategyIndex.value}`;
+    url = `http://120.27.208.55:10003/api/stock_analysis/${strategyIndex.value}`;
     // url = 'http://172.16.32.93:10015/stock_bay';
   }
   // else if (strategyIndex.value === '2') {

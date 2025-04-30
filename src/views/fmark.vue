@@ -57,7 +57,7 @@ function fetchDetail() {
   // console.log("检查：",fmark_total.value[current_page-1]);
 
   // const url = 'http://172.16.32.93:10015/stock_fmark'
-  const url = 'http://120.27.208.55:10015/stock_fmark'
+  const url = 'http://120.27.208.55:10003/api/stock_single_data'
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
     headers: {
@@ -72,11 +72,11 @@ function fetchDetail() {
     })
     .then(data => {
       console.log('成功:', data);
-      const grid = data.data || [];
+      const grid = data.grid_data || [];
       const flattened = grid.map(itemList => {
         const name = itemList[0][0] // 股票代码
-        // const true_name = itemList[0][12];//股票名称
-        const true_name = itemList[0][13];//股票名称
+        const true_name = itemList[0][12];//股票名称
+        // const true_name = itemList[0][13];//股票名称
         // console.log("true_name", true_name);
 
         const kline = itemList.map(d => [
@@ -85,16 +85,16 @@ function fetchDetail() {
           d[3],  // high
           d[4],  // low
           d[5],  // close
-          // d[6],  // 涨跌幅
-          // d[7],  // 成交量
-          // d[8],  // 买点
-          // d[9], // fmark
-          // d[12], // 股票名称
-          d[7],  // 涨跌幅
-          d[8],  // 成交量
-          d[9],  // 买点
-          d[10], // fmark
-          d[13], // 股票名称
+          d[6],  // 涨跌幅
+          d[7],  // 成交量
+          d[8],  // 买点
+          d[9], // fmark
+          d[12], // 股票名称
+          // d[7],  // 涨跌幅
+          // d[8],  // 成交量
+          // d[9],  // 买点
+          // d[10], // fmark
+          // d[13], // 股票名称
         ])
         return { name, data: kline, true_name }
       })
