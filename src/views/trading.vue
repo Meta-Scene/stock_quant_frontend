@@ -306,7 +306,7 @@ function initChart(id, stock) {
         },
       },
       ...currentDateSeries,
-      ...(buy.length > 0 && buy.some(point => point !== 0)
+      ...(buy.length > 0 && buy.some(point => point === 1)
         ? [{
           name: '买点',
           type: 'scatter',
@@ -316,7 +316,7 @@ function initChart(id, stock) {
           data: buy.map((point, idx) => {
             // console.log("idx：", idx);
             // console.log("data.date[idx]:", data.date[idx]);
-            if (point !== 0) {
+            if (point === 1) {
               return {
                 value: [data.date[idx], data.values[idx][2] - 0.3],
                 symbolSize: 15,
@@ -514,7 +514,9 @@ function gotoPage() {
 
 onMounted(async () => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
-  selectedDate.value = redictToNewDay();
+  // selectedDate.value = redictToNewDay();
+  selectedDate.value = '';
+  fetchData();
   await store.loadFmarkTotal(); // <<< 加上这句，从IDB加载 fmark_total
   // fetchData();
 })
@@ -566,7 +568,11 @@ function fetchData() {
   if (replayIndex.value === "1" || replayIndex.value === "2" || replayIndex.value === "3" || replayIndex.value === "4" || replayIndex.value === "5" || replayIndex.value === "6" || replayIndex.value === "7") {
     console.log("技术指标");
     params.append('page', currentPage.value);
-    params.append('trade_date', formatDate(selectedDate.value));
+    if(selectedDate.value!==''){
+        selectedDate.value=formatDate(selectedDate.value);
+        params.append('trade_date', selectedDate.value);
+    }
+
     // params.append('replay_index', replayIndex.value);
   }
   // 策略类型
@@ -574,7 +580,11 @@ function fetchData() {
     params.append('page', currentPage.value);
     if (stockSearch.value.trim() == "") {
       // if (stockName == '') {
-      params.append('trade_date', formatDate(selectedDate.value));
+      if(selectedDate.value!==''){
+        selectedDate.value=formatDate(selectedDate.value);
+        params.append('trade_date', selectedDate.value);
+      }
+
     }
     params.append('ts_code', stockSearch.value);
     // console.log("url正确");
@@ -582,12 +592,12 @@ function fetchData() {
 
   /* 接口 */
   // 技术指标
-  let url = `http://120.27.208.55:10003/api/stock_data/${replayIndex.value}`
+  // let url = `http://120.27.208.55:10003/api/stock_data/${replayIndex.value}`
+  let url = `http://120.27.208.55:10002/api/stock_data/${replayIndex.value}`
   // 策略类型
   if (strategyIndex.value !== '0') {
-    // url = 'http://120.27.208.55:10015/stock_bay'; //五日调整
-    url = `http://120.27.208.55:10003/api/stock_analysis/${strategyIndex.value}`;
-    // url = 'http://172.16.32.93:10015/stock_bay';
+    // url = `http://120.27.208.55:10003/api/stock_analysis/${strategyIndex.value}`;
+    url = `http://120.27.208.55:10002/api/stock_analysis/${strategyIndex.value}`;
   }
   // else if (strategyIndex.value === '2') {
   //   // url = 'http://120.27.208.55:10015/macd'; //MACD金叉
@@ -622,6 +632,9 @@ function fetchData() {
     .then(async data => {
       console.log('成功:', data);
       const grid = data.grid_data || [];
+      selectedDate.value=data.date;
+      console.log("打印日期",data.date);
+
 
       //grid.length
       if (data.stock_count === 0) {

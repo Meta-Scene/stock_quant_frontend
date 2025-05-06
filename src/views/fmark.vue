@@ -364,7 +364,7 @@ function initChart(stock) {
           }
         },
       },
-      ...(buy.length > 0 && buy.some(point => point !== 0)
+      ...(buy.length > 0 && buy.some(point => point === 1)
         ? [{
           name: '买点',
           type: 'scatter',
@@ -374,7 +374,7 @@ function initChart(stock) {
           data: buy.map((point, idx) => {
             // console.log("idx：", idx);
             // console.log("data.date[idx]:", data.date[idx]);
-            if (point !== 0) {
+            if (point === 1) {
               return {
                 // value: [data.date[idx], parseFloat((point - 0.08).toFixed(2))],
                 value: [data.date[idx], data.values[idx][2] - 0.3],
