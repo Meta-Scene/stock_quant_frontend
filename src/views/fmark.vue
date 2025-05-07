@@ -377,7 +377,7 @@ function initChart(stock) {
             if (point === 1) {
               return {
                 // value: [data.date[idx], parseFloat((point - 0.08).toFixed(2))],
-                value: [data.date[idx], data.values[idx][2] - 0.3],
+                value: [data.date[idx], data.values[idx][2] - (0.02*data.values[idx][1])],
                 symbolSize: 15,
               }
             }
@@ -410,7 +410,7 @@ function initChart(stock) {
             // console.log("data.date[idx]:", data.date[idx]);
             if (point === 2) {
               return {
-                value: [data.date[idx], data.values[idx][3]+0.3],
+                value: [data.date[idx], data.values[idx][3]+(0.02*data.values[idx][1])],
                 symbolSize: 15,
               }
             }
