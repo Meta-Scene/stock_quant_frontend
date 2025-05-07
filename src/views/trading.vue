@@ -115,13 +115,13 @@ function initChart(id, stock) {
     data: halfYear,
     smooth: true,
     lineStyle: {
-      color: '#ff77ff',
+      color: '#7fb797',
       width: 1.5,
     },
     symbol: 'circle',
     symbolSize: 3,
     itemStyle: {
-      color: '#ff77ff',
+      color: '#7fb797',
     },
   },
   ] : [];
@@ -132,13 +132,13 @@ function initChart(id, stock) {
     data: wholeYear,
     smooth: true,
     lineStyle: {
-      color: '#581845',
+      color: '#fa77ff',
       width: 1.5,
     },
     symbol: 'circle',
     symbolSize: 3,
     itemStyle: {
-      color: '#581845',
+      color: '#fa77ff',
     },
   },
   ] : [];
@@ -261,13 +261,13 @@ function initChart(id, stock) {
         data: MA(5, data),
         smooth: true,
         lineStyle: {
-          color: '#ff6347',
+          color: '#e4b246',
           width: 1.5
         },
         symbol: 'circle',
         symbolSize: 3,
         itemStyle: {
-          color: '#ff6347',
+          color: '#e4b246',
         },
       },
       {
@@ -276,13 +276,13 @@ function initChart(id, stock) {
         data: MA(10, data),
         smooth: true,
         lineStyle: {
-          color: '#4682b4',
+          color: '#84bdeb',
           width: 1.5,
         },
         symbol: 'circle',
         symbolSize: 3,
         itemStyle: {
-          color: '#4682b4',
+          color: '#84bdeb',
         },
       },
       ...halfYearLineShow,
@@ -325,7 +325,7 @@ function initChart(id, stock) {
             return null;
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
-            color: '#0e0a03',
+            color: '#172251',
           },
           label: {
             show: true,
@@ -339,48 +339,39 @@ function initChart(id, stock) {
         }]
         : []),
       //卖点
-      // ...(sell.length > 0 && sell.some(point => point !== 0)
-      //   ? [{
-      //     name: '卖点',
-      //     type: 'scatter',
-      //     coordinateSystem: 'cartesian2d',
-      //     symbol: 'rect',
-      //     z: 10,
-      //     symbolSize: [15, 15],
-      //     data: sell.map((point, idx) => {
-      //       // console.log("idx：", idx);
-      //       // console.log("data.date[idx]:", data.date[idx]);
-      //       if (point !== 0) {
-      //         return {
-      //           value: [data.date[idx], point],
-      //           symbolSize: 15,
-      //         }
-      //       }
-      //       return null;
-      //     }).filter(v => v !== null), // 过滤掉空值
-      //     itemStyle: {
-      //       // color: '##0e0a03',
-      //       color: '#e74c3c',
-      //       borderColor: '#c0392b',
-      //       borderWidth: 1.5,
-      //     },
-      //     label: {
-      //       // show: true,
-      //       // position: 'inside',
-      //       // align: 'center',
-      //       // verticalAlign: 'middle',
-      //       // color: '#fff',
-      //       // fontSize: 11,
-      //       // formatter: 'S'
-      //       show: true,
-      //       color: '#ffffff',
-      //       fontSize: 11,
-      //       fontWeight: 11,
-      //       position: 'inside',
-      //       formatter: 'S'
-      //     },
-      //   }]
-      //   : []),
+      ...(buy.length > 0 && buy.some(point => point === 2)
+        ? [{
+          name: '卖点',
+          type: 'scatter',
+          coordinateSystem: 'cartesian2d',
+          symbol: 'rect',
+          z: 10,
+          symbolSize: [15, 15],
+          data: buy.map((point, idx) => {
+            // console.log("idx：", idx);
+            // console.log("data.date[idx]:", data.date[idx]);
+            if (point === 2) {
+              return {
+                value: [data.date[idx], data.values[idx][3]+0.3],
+                symbolSize: 15,
+              }
+            }
+            return null;
+          }).filter(v => v !== null), // 过滤掉空值
+          itemStyle: {
+            color: '#9c287e',
+          },
+          label: {
+            show: true,
+            position: 'inside',
+            align: 'center',
+            verticalAlign: 'middle',
+            color: '#fdf102',
+            fontSize: 11,
+            formatter: 'S'
+          },
+        }]
+        : []),
     ],
   });
   // 点击股票代码跳转到新页面
@@ -566,7 +557,7 @@ function fetchData() {
   // console.log("replayindex：", replayIndex.value, "类型", typeof (replayIndex.value), "strategyIndex:", strategyIndex.value);
   // 技术指标
   if (replayIndex.value === "1" || replayIndex.value === "2" || replayIndex.value === "3" || replayIndex.value === "4" || replayIndex.value === "5" || replayIndex.value === "6" || replayIndex.value === "7") {
-    console.log("技术指标");
+    // console.log("技术指标");
     params.append('page', currentPage.value);
     if(selectedDate.value!==''){
         selectedDate.value=formatDate(selectedDate.value);
@@ -633,7 +624,7 @@ function fetchData() {
       console.log('成功:', data);
       const grid = data.grid_data || [];
       selectedDate.value=data.date;
-      console.log("打印日期",data.date);
+      // console.log("打印日期",data.date);
 
 
       //grid.length
@@ -676,14 +667,14 @@ function fetchData() {
         await store.saveFmarkTotal();  // <<< 保存到 IndexedDB
         // 在 fetchData 成功后，确保数据同步到本地存储
         // localStorage.setItem('fmark_total', JSON.stringify(fmark_total.value));
-        console.log("first get fmark_total:", fmark_total.value);
+        // console.log("first get fmark_total:", fmark_total.value);
 
       }
     })
     .catch(error => {
       console.error('数据获取失败:', error);
     });
-  console.log("赋值后 fmark_total:", fmark_total.value);
+  // console.log("赋值后 fmark_total:", fmark_total.value);
 }
 
 // 监听日期选择

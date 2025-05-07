@@ -13,7 +13,7 @@ const {
   fmark_total,
   favorites
 } = storeToRefs(store);
-console.log("fmark_total:", fmark_total.value);
+// console.log("fmark_total:", fmark_total.value);
 // console.log("fmark_total:", fmark_total.value);
 const toggleFavorite = (name) => store.toggleFavorite(name)
 const isFavorited = (name) => store.isFavorited(name)
@@ -43,7 +43,7 @@ onMounted(async () => {
 function fetchDetail() {
   const params = new URLSearchParams();
   let code;
-  console.log("是否有：", fmark_total);
+  // console.log("是否有：", fmark_total);
 
   if (fmark_total) {
     code = fmark_total.value[current_page.value - 1]
@@ -57,7 +57,7 @@ function fetchDetail() {
   // console.log("检查：",fmark_total.value[current_page-1]);
 
   // const url = 'http://172.16.32.93:10015/stock_fmark'
-  const url = 'http://120.27.208.55:10003/api/stock_single_data'
+  const url = 'http://120.27.208.55:10002/api/stock_single_data'
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
     headers: {
@@ -292,13 +292,13 @@ function initChart(stock) {
         data: MA(5, data),
         smooth: true,
         lineStyle: {
-          color: '#ff6347',
+          color: '#e4b246',
           width: 1.5
         },
         symbol: 'circle',
         symbolSize: 3,
         itemStyle: {
-          color: '#ff6347',
+          color: '#e4b246',
         },
       },
       {
@@ -307,13 +307,13 @@ function initChart(stock) {
         data: MA(10, data),
         smooth: true,
         lineStyle: {
-          color: '#4682b4',
+          color: '#84bdeb',
           width: 1.5,
         },
         symbol: 'circle',
         symbolSize: 3,
         itemStyle: {
-          color: '#4682b4',
+          color: '#84bdeb',
         },
       },
       {
@@ -322,13 +322,13 @@ function initChart(stock) {
         data: MA(120, data),
         smooth: true,
         lineStyle: {
-          color: '#ff77ff',
+          color: '#7fb797',
           width: 1.5,
         },
         symbol: 'circle',
         symbolSize: 3,
         itemStyle: {
-          color: '#ff77ff',
+          color: '#7fb797',
         },
       },
       {
@@ -337,13 +337,13 @@ function initChart(stock) {
         data: MA(250, data),
         smooth: true,
         lineStyle: {
-          color: '#581845',
+          color: '#fa77ff',
           width: 1.5,
         },
         symbol: 'circle',
         symbolSize: 3,
         itemStyle: {
-          color: '#581845',
+          color: '#fa77ff',
         },
       },
       {
@@ -384,7 +384,7 @@ function initChart(stock) {
             return null;
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
-            color: '#0e0a03',
+            color: '#172251',
           },
           label: {
             show: true,
@@ -396,7 +396,40 @@ function initChart(stock) {
             formatter: 'B'
           },
         }]
-        : [])
+        : []),
+        ...(buy.length > 0 && buy.some(point => point === 2)
+        ? [{
+          name: '卖点',
+          type: 'scatter',
+          coordinateSystem: 'cartesian2d',
+          symbol: 'rect',
+          z: 10,
+          symbolSize: [15, 15],
+          data: buy.map((point, idx) => {
+            // console.log("idx：", idx);
+            // console.log("data.date[idx]:", data.date[idx]);
+            if (point === 2) {
+              return {
+                value: [data.date[idx], data.values[idx][3]+0.3],
+                symbolSize: 15,
+              }
+            }
+            return null;
+          }).filter(v => v !== null), // 过滤掉空值
+          itemStyle: {
+            color: '#9c287e',
+          },
+          label: {
+            show: true,
+            position: 'inside',
+            align: 'center',
+            verticalAlign: 'middle',
+            color: '#fdf102',
+            fontSize: 11,
+            formatter: 'S'
+          },
+        }]
+        : []),
     ],
   });
 }
