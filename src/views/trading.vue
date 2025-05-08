@@ -326,6 +326,9 @@ function initChart(id, stock) {
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
             color: '#b41331',
+            // borderColor:'#b41331',
+            // borderWidth:2,
+            // borderRadius:5,
           },
           label: {
             show: true,
@@ -361,9 +364,9 @@ function initChart(id, stock) {
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
             color: '#1656a7',
-            // borderColor:'#0f1415',
+            // borderColor:'#1656a7',
             // borderWidth:2,
-            // borderRadius:30,
+            // borderRadius:5,
           },
           label: {
             show: true,
