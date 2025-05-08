@@ -325,15 +325,16 @@ function initChart(id, stock) {
             return null;
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
-            color: '#172251',
+            color: '#b41331',
           },
           label: {
             show: true,
             position: 'inside',
             align: 'center',
             verticalAlign: 'middle',
-            color: '#fff',
-            fontSize: 11,
+            color: '#FFFFFF',
+            fontSize: 14,
+            fontWeight:'bold',
             formatter: 'B'
           },
         }]
@@ -359,15 +360,19 @@ function initChart(id, stock) {
             return null;
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
-            color: '#9c287e',
+            color: '#1656a7',
+            // borderColor:'#0f1415',
+            // borderWidth:2,
+            // borderRadius:30,
           },
           label: {
             show: true,
             position: 'inside',
             align: 'center',
             verticalAlign: 'middle',
-            color: '#fdf102',
-            fontSize: 11,
+            color: '#FFFFFF',
+            fontSize: 14,
+            fontWeight:'bold',
             formatter: 'S'
           },
         }]

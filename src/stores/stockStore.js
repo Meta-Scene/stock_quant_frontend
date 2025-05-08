@@ -56,7 +56,7 @@ export default defineStore('stock', {
     // 发送 favorites 数组到后端
     async updateFavorites() {
       try {
-        const response = await fetch('http://172.16.33.188:8000/add_stock', {
+        const response = await fetch('http://120.27.208.55:10003/add_stock', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
