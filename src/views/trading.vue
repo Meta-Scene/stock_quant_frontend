@@ -631,7 +631,10 @@ function fetchData() {
     .then(async data => {
       console.log('成功:', data);
       const grid = data.grid_data || [];
-      selectedDate.value=data.date;
+      if(stockSearch.value==''){
+        selectedDate.value=data.date;
+      }
+
       // console.log("打印日期",data.date);
 
 
@@ -707,6 +710,19 @@ watch(stockData, () => {
     }, 0)
   })
 }, { immediate: true })
+const nonTradingDays = ['2025-05-01', '2025-05-02', '2025-05-03','2025-05-04','2025-05-05'];
+
+const pickerOptions = (date) => {
+  // 打印传入的原始日期对象
+  console.log("Selected date object: ", date);
+  const dateStr = formatDate(date);  // 格式化日期
+  console.log("Formatted date string: ", dateStr);  // 打印格式化后的日期
+  // 判断日期是否在非交易日数组中
+  const isDisabled = nonTradingDays.includes(dateStr);
+  console.log(`Is ${dateStr} disabled? ${isDisabled}`);
+  return isDisabled;
+}
+
 </script>
 
 <template>
@@ -723,7 +739,7 @@ watch(stockData, () => {
         </div>
         <div class="column">
           <span class="label">日期</span>
-          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" style="width: 150px" />
+          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" style="width: 150px" :disabled-date="pickerOptions"/>
         </div>
         <div class=" column">
           <el-menu :default-active="replayIndex" mode="horizontal" class="strategy-menu" @select="handleReplay"
