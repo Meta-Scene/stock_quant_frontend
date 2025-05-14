@@ -515,6 +515,14 @@ onMounted(async () => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   // selectedDate.value = redictToNewDay();
   selectedDate.value = '';
+
+  const initialDate = new Date();  // 使用当前日期
+  const { year, month } = getYearAndMonth(initialDate);
+  console.log(`Initial year: ${year}, Initial month: ${month}`);
+
+  // 发送初始年和月到后端
+  // sendYearAndMonthToBackend(year, month);
+
   fetchData();
   await store.loadFmarkTotal(); // <<< 加上这句，从IDB加载 fmark_total
   // fetchData();
@@ -714,14 +722,52 @@ const nonTradingDays = ['2025-05-01', '2025-05-02', '2025-05-03','2025-05-04','2
 
 const pickerOptions = (date) => {
   // 打印传入的原始日期对象
-  console.log("Selected date object: ", date);
+  // console.log("Selected date object: ", date);
   const dateStr = formatDate(date);  // 格式化日期
-  console.log("Formatted date string: ", dateStr);  // 打印格式化后的日期
+  // console.log("Formatted date string: ", dateStr);  // 打印格式化后的日期
   // 判断日期是否在非交易日数组中
   const isDisabled = nonTradingDays.includes(dateStr);
-  console.log(`Is ${dateStr} disabled? ${isDisabled}`);
+  // console.log(`Is ${dateStr} disabled? ${isDisabled}`);
   return isDisabled;
 }
+
+// 获取当前显示的年和月
+const getYearAndMonth = (date) => {
+  const currentDate = new Date(date);  // 传入选中的日期
+  const year = currentDate.getFullYear();  // 获取年份
+  const month = currentDate.getMonth() + 1;  // 获取月份
+  return { year, month };
+};
+
+// 面板变化时的回调函数
+const onPanelChange = (newDate) => {
+  const { year, month } = getYearAndMonth(newDate);
+  console.log(`Panel changed, Current year: ${year}, month: ${month}`);
+
+  // 发送年和月到后端
+  // sendYearAndMonthToBackend(year, month);
+};
+
+// 发送年和月到后端
+const sendYearAndMonthToBackend = (year, month) => {
+  console.log(`Sending year: ${year}, month: ${month}`);
+
+  // 示例：发送到后端的 API 请求
+  fetch('/api/your-endpoint', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ year, month }),
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Response from backend:', data);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+};
 
 </script>
 
@@ -739,7 +785,7 @@ const pickerOptions = (date) => {
         </div>
         <div class="column">
           <span class="label">日期</span>
-          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" style="width: 150px" :disabled-date="pickerOptions"/>
+          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" style="width: 150px" :disabled-date="pickerOptions" @panel-change="onPanelChange"/>
         </div>
         <div class=" column">
           <el-menu :default-active="replayIndex" mode="horizontal" class="strategy-menu" @select="handleReplay"

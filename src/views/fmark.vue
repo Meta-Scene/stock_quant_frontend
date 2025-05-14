@@ -7,6 +7,10 @@ import { MA } from '@/utils/MA';
 import useStockStore from '@/stores/stockStore';
 import { storeToRefs } from 'pinia';
 
+//iframe
+const showIframe = ref(false);
+const iframeUrl = ref('');
+
 const store = useStockStore();
 store.init()
 const {
@@ -441,6 +445,16 @@ function initChart(stock) {
         : []),
     ],
   });
+
+  // 监听标题点击
+  chart.on('click', params => {
+    if (params.componentType === 'title') {
+      // stock.name 示例："000700.SZ" 或 "000700.SH"
+      const codeNoSuffix = stock.name.split('.')[0];
+      iframeUrl.value = `https://wap.eastmoney.com/quote/stock/0.${codeNoSuffix}.html?appfenxiang=1`;
+      showIframe.value = true;
+    }
+  });
 }
 
 function updateRouteWithCode() {
@@ -494,10 +508,63 @@ function find_current_code() {
     </div>
     <button class="btn left" @click="prevPage()">&lt;</button>
     <button class="btn right" @click="nextPage()">&gt;</button>
+
+    <!-- iframe 弹窗 -->
+    <div v-if="showIframe" class="iframe-modal">
+      <div class="iframe-content">
+        <button class="close-btn" @click="showIframe = false">×</button>
+        <iframe :src="iframeUrl" frameborder="0"></iframe>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* iframe */
+
+/* 新增 iframe 弹窗样式 */
+.iframe-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+.iframe-content {
+  position: relative;
+  width: 90%;
+  height: 90%;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+
+  display: flex;              /* ← 新增 */
+  align-items: center;        /* ← 新增：垂直居中 */
+  justify-content: center;    /* ← 新增：水平居中 */
+}
+.iframe-content iframe {
+  border: none;
+  width: 375px;   /* 常见手机视口宽度 */
+  height: 667px;  /* 根据实际比例调整 */
+}
+.close-btn {
+  position: absolute;
+  top: 8px; right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+
+
+
+
+
+
 .fullscreen-btn {
   position: absolute;
   top: 10px;
@@ -561,7 +628,7 @@ body {
 /* 分页按钮 */
 .btn {
   position: absolute;
-  top: calc(50% - 27px);
+  /* top: calc(50% - 27px); */
   overflow: hidden;
   width: 54px;
   height: 54px;
@@ -588,11 +655,13 @@ body {
 }
 
 .left {
-  left: 30px;
+  right: 30px;
+  top: calc(50% - 110px);
 }
 
 .right {
   right: 30px;
+  top: calc(50% - 40px);
 }
 
 .chart-wrapper .chart {
