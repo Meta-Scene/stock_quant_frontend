@@ -188,3 +188,6 @@ TODO:
 - 自选股接口
 - tooltips重写
 - 接口文档
+
+
+跨域 iframe 无法直接操作 contentWindow.history，在 Vue 中维护一份 URL 历史
