@@ -26,7 +26,7 @@ export const strategies = {
 
 /* 技术指标数组 */
 export const conditions = {
-    '1': '所有',
+    '1': '指数',
     '2': '每日涨停',
     '3': '每日跌停',
     '4': '半年线',

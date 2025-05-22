@@ -792,7 +792,7 @@ const sendYearAndMonthToBackend = (year, month) => {
             :ellipsis="false">
             <el-sub-menu index="replay">
               <template #title>技术指标</template>
-              <el-menu-item index="1">所有</el-menu-item>
+              <el-menu-item index="1">指数</el-menu-item>
               <el-menu-item index="2">每日涨停</el-menu-item>
               <el-menu-item index="3">每日跌停</el-menu-item>
               <el-menu-item index="4">半年线</el-menu-item>
