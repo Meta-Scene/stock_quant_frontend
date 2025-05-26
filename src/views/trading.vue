@@ -11,7 +11,7 @@ import { pageSize, upColor, upBorderColor, downColor, downBorderColor, strategie
 
 const router = useRouter();
 const store = useStockStore();
-store.init()
+// store.init()
 const {
   stockNumber,
   stockData,
@@ -25,8 +25,13 @@ const {
   fmark_total,
   favorites
 } = storeToRefs(store);
-const toggleFavorite = (name) => store.toggleFavorite(name)
-const isFavorited = (name) => store.isFavorited(name)
+const toggleFavorite = (code) => store.toggleFavorite(code)
+const isFavorited = (code) => favorites.value.includes(code);
+
+
+
+
+
 
 const totalPage = computed(() => {
   return Math.ceil(stockNumber.value / pageSize)
@@ -512,6 +517,8 @@ function gotoPage() {
 }
 
 onMounted(async () => {
+  // 组件初始化时，store.init() 里会自动 GET /collect/all
+  await store.init()
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   // selectedDate.value = redictToNewDay();
   selectedDate.value = '';
@@ -605,25 +612,19 @@ function fetchData() {
   if (strategyIndex.value !== '0') {
     // url = `http://120.27.208.55:10003/api/stock_analysis/${strategyIndex.value}`;
     url = `http://120.27.208.55:10002/api/stock_analysis/${strategyIndex.value}`;
-  }
-  // else if (strategyIndex.value === '2') {
-  //   // url = 'http://120.27.208.55:10015/macd'; //MACD金叉
-  //   // url = 'http://172.16.33.222:10015/macd';
-  // }
-  // else if (strategyIndex.value === '3') {
-  //   // url = 'http://120.27.208.55:10015/kdj'; //KDJ金叉
-  //   // url = 'http://172.16.32.93:10015/kdj';
-  // }
-  // else if (strategyIndex.value === '4') {
-  //   // url = 'http://120.27.208.55:10015/low_in'; //低位资金净流入
-  //   // url = 'http://172.16.32.93:10015/low_in';
-  // }
-  // else if (strategyIndex.value === '5') {
-  //   // url = 'http://120.27.208.55:10015/high_out'; //高位资金净流出
-  //   // url = 'http://172.16.32.93:10015/high_out';
-  // }
 
-  fetch(`${url}?${params.toString()}`, {
+  }
+  let final=`${url}?${params.toString()}`;
+  if(analysisIndex.value!=='0'){
+    url=`http://120.27.208.55:10002/api/stock_big_data_analysis/${analysisIndex.value}`;
+    final=`${url}`;
+  }
+
+
+
+
+
+  fetch(final, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -748,26 +749,26 @@ const onPanelChange = (newDate) => {
   // sendYearAndMonthToBackend(year, month);
 };
 
-// 发送年和月到后端
-const sendYearAndMonthToBackend = (year, month) => {
-  console.log(`Sending year: ${year}, month: ${month}`);
+// // 发送年和月到后端
+// const sendYearAndMonthToBackend = (year, month) => {
+//   console.log(`Sending year: ${year}, month: ${month}`);
 
-  // 示例：发送到后端的 API 请求
-  fetch('/api/your-endpoint', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ year, month }),
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('Response from backend:', data);
-  })
-  .catch(error => {
-    console.error('Error:', error);
-  });
-};
+//   // 示例：发送到后端的 API 请求
+//   fetch('/api/your-endpoint', {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify({ year, month }),
+//   })
+//   .then(response => response.json())
+//   .then(data => {
+//     console.log('Response from backend:', data);
+//   })
+//   .catch(error => {
+//     console.error('Error:', error);
+//   });
+// };
 
 </script>
 
