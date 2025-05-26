@@ -825,13 +825,14 @@ const sendYearAndMonthToBackend = (year, month) => {
               <el-menu-item index="3">🟢 KDJ金叉</el-menu-item>
               <el-menu-item index="4">🟢 低位资金净流入</el-menu-item>
               <el-menu-item index="5">🟢 高位资金净流出</el-menu-item>
-              <el-menu-item index="6">🟡 打板策略</el-menu-item>
-              <el-menu-item index="7">🟡 日内回转</el-menu-item>
-              <el-menu-item index="8">🟡 波段交易</el-menu-item>
-              <el-menu-item index="9">🔴 基本面选股</el-menu-item>
-              <el-menu-item index="10">🔴 套利交易</el-menu-item>
-              <el-menu-item index="11">🔴 专家跟随</el-menu-item>
-              <el-menu-item index="12">🔴 财务估值</el-menu-item>
+              <el-menu-item index="6">🟢 连涨放量</el-menu-item>
+              <el-menu-item index="7">🟡 打板策略</el-menu-item>
+              <el-menu-item index="8">🟡 日内回转</el-menu-item>
+              <el-menu-item index="9">🟡 波段交易</el-menu-item>
+              <el-menu-item index="10">🔴 基本面选股</el-menu-item>
+              <el-menu-item index="11">🔴 套利交易</el-menu-item>
+              <el-menu-item index="12">🔴 专家跟随</el-menu-item>
+              <el-menu-item index="13">🔴 财务估值</el-menu-item>
             </el-sub-menu>
           </el-menu>
         </div>
