@@ -5,6 +5,7 @@ const BASE = 'http://120.27.208.55:10002';
 
 export default defineStore('stock', {
   state:() => ({
+      // user:null,
       stockNumber:0,
       stockData:[],
       charts:{},
@@ -18,6 +19,20 @@ export default defineStore('stock', {
       favorites:[],//自选股
   }),
   actions: {
+    // login(username, password) {
+    //   // 模拟登录逻辑
+    //   if (username === 'admin' && password === '123456') {
+    //     this.user = { username }; // 保存用户信息
+    //     return true;
+    //   }
+    //   return false;
+    // },
+    // logout() {
+    //   this.user = null; // 清除用户信息
+    // },
+
+
+
     /** 拉取所有自选股 **/
     async loadCollectsFromServer() {
       const res = await fetch(`${BASE}/collect/all`, { method: 'GET' })
