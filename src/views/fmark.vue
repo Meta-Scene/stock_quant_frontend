@@ -12,14 +12,10 @@ const showIframe = ref(false);
 const iframeUrl = ref('');
 
 const toggleIframe = () => {
-  showIframe.value = !showIframe.value; // 切换显示状态
-  // 如果是要展开，就先给 iframeUrl 赋值
+  showIframe.value = !showIframe.value;
   if (showIframe.value) {
-    // 拿到当前页的完整 code，比如 "000700.SZ"
     const fullCode = fmark_total.value[current_page.value - 1];
-    // 把后缀去掉，只留数字部分
     const codeNoSuffix = fullCode.split('.')[0];
-    // 构造你要的东财 wap 链接
     iframeUrl.value = `https://wap.eastmoney.com/quote/stock/0.${codeNoSuffix}.html?appfenxiang=1`;
   }
 };
@@ -31,7 +27,6 @@ const {
   favorites
 } = storeToRefs(store);
 // console.log("fmark_total:", fmark_total.value);
-// console.log("fmark_total:", fmark_total.value);
 const toggleFavorite = (name) => store.toggleFavorite(name)
 const isFavorited = (name) => store.isFavorited(name)
 
@@ -42,13 +37,12 @@ const ts_code = route.query.stockCode;
 // console.log(`股票代码: ${ts_code}`);
 // const current_page = ref(find_current_code() + 1);
 // const total_page = ref(fmark_total.value.length);
-const current_page = ref(1); // 初始是第一页，先别用 find_current_code
+const current_page = ref(1);
 const total_page = ref(0);
 
 onMounted(async () => {
-  await store.loadFmarkTotal();  // 直接等它加载完 fmark_total
+  await store.loadFmarkTotal();
   if (fmark_total.value.length > 0) {
-    //111
     total_page.value = fmark_total.value.length;
     current_page.value = find_current_code() + 1;
     await fetchDetail();
@@ -403,9 +397,6 @@ function initChart(stock) {
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
             color: '#b41331',
-            // borderColor:'#b41331',
-            // borderWidth:2,
-            // borderRadius:5,
           },
           label: {
             show: true,
@@ -440,9 +431,6 @@ function initChart(stock) {
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
             color: '#1656a7',
-            // borderColor:'#1656a7',
-            // borderWidth:2,
-            // borderRadius:5,
           },
           label: {
             show: true,
@@ -462,7 +450,6 @@ function initChart(stock) {
   // 监听标题点击
   chart.on('click', params => {
     if (params.componentType === 'title') {
-      // stock.name 示例："000700.SZ" 或 "000700.SH"
       const codeNoSuffix = stock.name.split('.')[0];
       iframeUrl.value = `https://wap.eastmoney.com/quote/stock/0.${codeNoSuffix}.html?appfenxiang=1`;
       showIframe.value = true;
@@ -535,36 +522,26 @@ function find_current_code() {
       </div>
     </div>
 
-
-    <!-- iframe 弹窗 -->
-    <!-- <div v-if="showIframe" class="iframe-modal">
-      <div class="iframe-content">
-        <button class="close-btn" @click="showIframe = false">×</button>
-        <iframe :src="iframeUrl" frameborder="0"></iframe>
-      </div>
-    </div> -->
   </div>
 </template>
 
 <style scoped>
-/* iframe */
-
-/* iframe 弹窗样式 */
+/* iframe  */
 .iframe-modal {
   position: fixed;
   top: 0;
-  left: 0; /* 固定在左侧 */
-  width: 375px; /* 移动端宽度 */
-  height: 100%; /* 高度占满屏幕 */
+  left: 0;
+  width: 375px;
+  height: 100%;
   background: #fff;
   z-index: 999;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
-  transform: translateX(-100%); /* 默认隐藏在左侧 */
-  transition: transform 0.3s ease; /* 添加动画效果 */
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
 }
 
 .iframe-modal.open {
-  transform: translateX(0); /* 展开时显示 */
+  transform: translateX(0);
 }
 
 .iframe-content {
@@ -580,14 +557,14 @@ function find_current_code() {
   height: 100%;
 }
 
-/* 展开/收起按钮样式 */
+
 .toggle-bar {
   position: absolute;
   top: 50%;
-  right: -20px; /* 按钮在 iframe 的右侧 */
+  right: -20px;
   transform: translateY(-50%);
-  width: 20px; /* 细条宽度 */
-  height: 100px; /* 细条高度 */
+  width: 20px;
+  height: 100px;
   background: #007bff;
   color: #fff;
   display: flex;
@@ -608,9 +585,6 @@ function find_current_code() {
   font-weight: bold;
   user-select: none;
 }
-
-
-
 
 
 .fullscreen-btn {

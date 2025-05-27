@@ -28,11 +28,6 @@ const {
 const toggleFavorite = (code) => store.toggleFavorite(code)
 const isFavorited = (code) => favorites.value.includes(code);
 
-
-
-
-
-
 const totalPage = computed(() => {
   return Math.ceil(stockNumber.value / pageSize)
 })
@@ -331,9 +326,6 @@ function initChart(id, stock) {
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
             color: '#b41331',
-            // borderColor:'#b41331',
-            // borderWidth:2,
-            // borderRadius:5,
           },
           label: {
             show: true,
@@ -369,9 +361,6 @@ function initChart(id, stock) {
           }).filter(v => v !== null), // 过滤掉空值
           itemStyle: {
             color: '#1656a7',
-            // borderColor:'#1656a7',
-            // borderWidth:2,
-            // borderRadius:5,
           },
           label: {
             show: true,
@@ -517,7 +506,6 @@ function gotoPage() {
 }
 
 onMounted(async () => {
-  // 组件初始化时，store.init() 里会自动 GET /collect/all
   await store.init()
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   // selectedDate.value = redictToNewDay();
@@ -531,7 +519,7 @@ onMounted(async () => {
   // sendYearAndMonthToBackend(year, month);
 
   fetchData();
-  await store.loadFmarkTotal(); // <<< 加上这句，从IDB加载 fmark_total
+  await store.loadFmarkTotal(); //从IDB加载 fmark_total
   // fetchData();
 })
 
@@ -620,16 +608,12 @@ function fetchData() {
     final=`${url}`;
   }
 
-
-
-
-
   fetch(final, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
-    cache: 'no-cache', // 禁用缓存
+    cache: 'no-cache',
   })
     .then(response => {
       if (!response.ok) {
@@ -645,8 +629,6 @@ function fetchData() {
       }
 
       // console.log("打印日期",data.date);
-
-
       //grid.length
       if (data.stock_count === 0) {
         currentPage.value = 0;
@@ -684,7 +666,7 @@ function fetchData() {
       // 把全部的股票代码拿到
       if (data.ts_codes) {
         fmark_total.value = data.ts_codes;
-        await store.saveFmarkTotal();  // <<< 保存到 IndexedDB
+        await store.saveFmarkTotal();  // 存到 IndexedDB
         // 在 fetchData 成功后，确保数据同步到本地存储
         // localStorage.setItem('fmark_total', JSON.stringify(fmark_total.value));
         // console.log("first get fmark_total:", fmark_total.value);

@@ -62,17 +62,11 @@ export default defineStore('stock', {
     isFavorited(code) {
       return this.favorites.includes(code)
     },
-
-
-
-
-
-
-    // 新增：保存 fmark_total 到 IndexedDB
+    // 保存 fmark_total 到 IndexedDB
     async saveFmarkTotal() {
       await set('fmark_total', this.fmark_total.slice());
     },
-    // 新增：从 IndexedDB 读取 fmark_total
+    // 从 IndexedDB 读取 fmark_total
     async loadFmarkTotal() {
       const data = await get('fmark_total');
       if (data) {
