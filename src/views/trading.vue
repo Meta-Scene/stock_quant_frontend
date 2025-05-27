@@ -42,6 +42,7 @@ function showDetail(stock) {
         name: 'StockFmark',
         query: {
           stockCode: stock.name,
+          strategyIndexValue:strategyIndex.value,
         },
       }).href, '_blank'
     );
