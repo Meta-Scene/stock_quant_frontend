@@ -11,6 +11,19 @@ import { storeToRefs } from 'pinia';
 const showIframe = ref(false);
 const iframeUrl = ref('');
 
+const toggleIframe = () => {
+  showIframe.value = !showIframe.value; // 切换显示状态
+  // 如果是要展开，就先给 iframeUrl 赋值
+  if (showIframe.value) {
+    // 拿到当前页的完整 code，比如 "000700.SZ"
+    const fullCode = fmark_total.value[current_page.value - 1];
+    // 把后缀去掉，只留数字部分
+    const codeNoSuffix = fullCode.split('.')[0];
+    // 构造你要的东财 wap 链接
+    iframeUrl.value = `https://wap.eastmoney.com/quote/stock/0.${codeNoSuffix}.html?appfenxiang=1`;
+  }
+};
+
 const store = useStockStore();
 store.init()
 const {
@@ -509,57 +522,92 @@ function find_current_code() {
     <button class="btn left" @click="prevPage()">&lt;</button>
     <button class="btn right" @click="nextPage()">&gt;</button>
 
+
+
     <!-- iframe 弹窗 -->
-    <div v-if="showIframe" class="iframe-modal">
+    <div :class="['iframe-modal', { open: showIframe }]">
+      <!-- 展开/收起按钮 -->
+      <div class="toggle-bar" @click="toggleIframe">
+        <span>{{ showIframe ? '>' : '<' }}</span>
+      </div>
+      <div class="iframe-content">
+        <iframe :src="iframeUrl" frameborder="0"></iframe>
+      </div>
+    </div>
+
+
+    <!-- iframe 弹窗 -->
+    <!-- <div v-if="showIframe" class="iframe-modal">
       <div class="iframe-content">
         <button class="close-btn" @click="showIframe = false">×</button>
         <iframe :src="iframeUrl" frameborder="0"></iframe>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <style scoped>
 /* iframe */
 
-/* 新增 iframe 弹窗样式 */
+/* iframe 弹窗样式 */
 .iframe-modal {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  top: 0;
+  left: 0; /* 固定在左侧 */
+  width: 375px; /* 移动端宽度 */
+  height: 100%; /* 高度占满屏幕 */
+  background: #fff;
+  z-index: 999;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  transform: translateX(-100%); /* 默认隐藏在左侧 */
+  transition: transform 0.3s ease; /* 添加动画效果 */
+}
+
+.iframe-modal.open {
+  transform: translateX(0); /* 展开时显示 */
+}
+
+.iframe-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.iframe-content iframe {
+  border: none;
+  width: 100%;
+  height: 100%;
+}
+
+/* 展开/收起按钮样式 */
+.toggle-bar {
+  position: absolute;
+  top: 50%;
+  right: -20px; /* 按钮在 iframe 的右侧 */
+  transform: translateY(-50%);
+  width: 20px; /* 细条宽度 */
+  height: 100px; /* 细条高度 */
+  background: #007bff;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999;
-}
-.iframe-content {
-  position: relative;
-  width: 90%;
-  height: 90%;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-
-  display: flex;              /* ← 新增 */
-  align-items: center;        /* ← 新增：垂直居中 */
-  justify-content: center;    /* ← 新增：水平居中 */
-}
-.iframe-content iframe {
-  border: none;
-  width: 375px;   /* 常见手机视口宽度 */
-  height: 667px;  /* 根据实际比例调整 */
-}
-.close-btn {
-  position: absolute;
-  top: 8px; right: 12px;
-  background: transparent;
-  border: none;
-  font-size: 24px;
   cursor: pointer;
-  z-index: 1;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease;
 }
 
+.toggle-bar:hover {
+  background: #0056b3;
+}
 
+.toggle-bar span {
+  font-size: 16px;
+  font-weight: bold;
+  user-select: none;
+}
 
 
 
