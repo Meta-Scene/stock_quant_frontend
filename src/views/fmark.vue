@@ -34,6 +34,7 @@ defineProps({ name: 'StockFmark' });
 const route = useRoute();
 const router = useRouter();
 const ts_code = route.query.stockCode;
+const strategyIndexValue=route.query.strategyIndexValue;
 // console.log(`股票代码: ${ts_code}`);
 // const current_page = ref(find_current_code() + 1);
 // const total_page = ref(fmark_total.value.length);
@@ -68,7 +69,7 @@ function fetchDetail() {
   // console.log("检查：",fmark_total.value[current_page-1]);
 
   // const url = 'http://172.16.32.93:10015/stock_fmark'
-  const url = 'http://120.27.208.55:10002/api/stock_single_data'
+  const url = `http://120.27.208.55:10002/api/stock_single_data/${strategyIndexValue}`;
   fetch(`${url}?${params.toString()}`, {
     method: 'GET',
     headers: {
