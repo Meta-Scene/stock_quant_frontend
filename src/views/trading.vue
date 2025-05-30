@@ -579,7 +579,7 @@ function fetchData() {
     // params.append('replay_index', replayIndex.value);
   }
   // 策略类型
-  if (strategyIndex.value === "1" || strategyIndex.value === "2" || strategyIndex.value === "3" || strategyIndex.value === "4" || strategyIndex.value === "5") {
+  if (strategyIndex.value === "1" || strategyIndex.value === "2" || strategyIndex.value === "3" || strategyIndex.value === "4" || strategyIndex.value === "5"||strategyIndex.value === "6") {
     params.append('page', currentPage.value);
     if (stockSearch.value.trim() == "") {
       // if (stockName == '') {
@@ -591,6 +591,17 @@ function fetchData() {
     }
     params.append('ts_code', stockSearch.value);
     // console.log("url正确");
+  }
+
+  // 大数据分析
+  if (analysisIndex.value === "1" || analysisIndex.value === "2" || analysisIndex.value === "3" ) {
+  // console.log("技术指标");
+  params.append('page', currentPage.value);
+    if(selectedDate.value!==''){
+        selectedDate.value=formatDate(selectedDate.value);
+        params.append('trade_date', selectedDate.value);
+    }
+    // params.append('replay_index', replayIndex.value);
   }
 
   /* 接口 */

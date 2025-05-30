@@ -1,4 +1,4 @@
-<!-- <template>
+<template>
   <div class="login-wrapper">
     <form @submit.prevent="handleSubmit" class="login-container" novalidate>
       <h1>量化超级复盘平台</h1>
@@ -39,8 +39,8 @@ const username = ref('');
 const password = ref('');
 const errorMessage = ref('');
 
-const handleSubmit = () => {
-  const success = store.login(username.value, password.value);
+const handleSubmit = async() => {
+  const success = await store.login(username.value, password.value);
   if (success) {
     router.push('/trading');
   } else {
@@ -120,4 +120,4 @@ button:hover {
   font-size: 0.875rem;
   text-align: center;
 }
-</style> -->
+</style>

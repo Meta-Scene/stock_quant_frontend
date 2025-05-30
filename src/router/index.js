@@ -5,7 +5,7 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
+      path: '/trading',
       name: 'Trading',
       component: () => import('@/views/trading.vue'),
       // meta: { requiresAuth: true }, // 需要登录
@@ -17,11 +17,11 @@ const router = createRouter({
       // meta: { requiresAuth: true }, // 需要登录
       props: route => ({ stockCode: route.query.stockCode }),
     },
-    // {
-    //   path: '/',
-    //   name: 'Login',
-    //   component: ()=>import('@/views/login.vue'),
-    // },
+    {
+      path: '/',
+      name: 'Login',
+      component: ()=>import('@/views/login.vue'),
+    },
   ],
 });
 

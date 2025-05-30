@@ -5,7 +5,7 @@ const BASE = 'http://120.27.208.55:10002';
 
 export default defineStore('stock', {
   state:() => ({
-      // user:null,
+      user:null,
       stockNumber:0,
       stockData:[],
       charts:{},
@@ -22,14 +22,41 @@ export default defineStore('stock', {
     // login(username, password) {
     //   // 模拟登录逻辑
     //   if (username === 'admin' && password === '123456') {
-    //     this.user = { username }; // 保存用户信息
+    //     this.user = { username };
     //     return true;
     //   }
     //   return false;
     // },
-    // logout() {
-    //   this.user = null; // 清除用户信息
-    // },
+    async login(username, password) {
+      try {
+        const response = await fetch(`http://172.16.33.65:8080/user/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ account: username, passWord: password }),
+
+        });
+
+        if (!response.ok) {
+          throw new Error('登录失败');
+        }
+
+        const data = await response.json();
+        this.user = {
+          username: data.userInfo.userName, // 保存用户名
+          token: data.accessToken,         // 保存 token
+          expireIn: data.expireIn          // 保存 token 过期时间
+        };
+        return true;
+      } catch (error) {
+        console.error('登录错误:', error);
+        return false;
+      }
+    },
+    logout() {
+      this.user = null;
+    },
 
 
 
