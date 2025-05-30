@@ -67,7 +67,7 @@ npm run dev
 
 ### 服务器（aliyun）前端部署 ☝️🤓
 
-http://120.27.208.55:10014
+http://120.27.208.55:10000
 
 #### 上传
 
@@ -82,7 +82,7 @@ http://120.27.208.55:10014
 
 ```
 server {
-        listen       10014;
+        listen       10000;
         server_name  localhost;
 
         location / {
@@ -95,7 +95,7 @@ server {
 
 #### 重启nginx服务
 
-`cd /usr/local/nginx/sbin/`
+`cd /usr/sbin`
 
 `./nginx -s stop`
 
