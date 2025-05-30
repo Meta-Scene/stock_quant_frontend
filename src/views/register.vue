@@ -1,7 +1,17 @@
 <template>
-  <div class="login-wrapper">
-    <form @submit.prevent="handleSubmit" class="login-container" novalidate>
-      <h1>量化超级复盘平台</h1>
+  <div class="register-wrapper">
+    <form @submit.prevent="handleSubmit" class="register-container" novalidate>
+      <h1>注册新用户</h1>
+      <div class="form-group">
+        <label for="fakename">用户名</label>
+        <input
+          id="fakename"
+          v-model="fakename"
+          type="text"
+          placeholder="请输入用户名"
+          required
+        />
+      </div>
       <div class="form-group">
         <label for="username">账号</label>
         <input
@@ -23,9 +33,9 @@
         />
       </div>
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-      <button type="submit">登录</button>
-      <p class="register-link">
-        没有账号？<router-link to="/register">注册</router-link>
+      <button type="submit">注册</button>
+      <p class="login-link">
+        已有账号？<router-link to="/">登录</router-link>
       </p>
     </form>
   </div>
@@ -40,37 +50,21 @@ const router = useRouter();
 const store = useStockStore();
 const username = ref('');
 const password = ref('');
+const fakename = ref('');
 const errorMessage = ref('');
 
-const handleSubmit = async() => {
-  const success = await store.login(username.value, password.value);
+const handleSubmit = async () => {
+  const success = await store.register(fakename.value,username.value, password.value);
   if (success) {
-    router.push('/trading');
+    router.push('/'); // 注册成功后跳转到登录页面
   } else {
-    errorMessage.value = '用户名或密码错误';
+    errorMessage.value = '注册失败，请重试';
   }
 };
 </script>
 
 <style scoped>
-
-.register-link {
-  margin-top: 1rem;
-  text-align: center;
-  font-size: 0.875rem;
-}
-
-.register-link a {
-  color: #007bff;
-  text-decoration: none;
-}
-
-.register-link a:hover {
-  text-decoration: underline;
-}
-
-
-.login-wrapper {
+.register-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -78,14 +72,14 @@ const handleSubmit = async() => {
   background-color: #f5f5f5;
 }
 
-.login-container {
+.register-container {
   width: 320px;
   background: #ffffff;
   padding: 2rem;
   border-radius: 8px;
 }
 
-.login-container h1 {
+.register-container h1 {
   margin: 0 0 1.5rem;
   font-size: 1.5rem;
   text-align: center;
@@ -139,5 +133,20 @@ button:hover {
   margin-bottom: 1rem;
   font-size: 0.875rem;
   text-align: center;
+}
+
+.login-link {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.login-link a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
 }
 </style>

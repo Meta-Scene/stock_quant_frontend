@@ -11,6 +11,12 @@ const router = createRouter({
       // meta: { requiresAuth: true }, // 需要登录
     },
     {
+      path: '/register',
+      name: 'Register',
+      component: () => import('@/views/register.vue'),
+      // meta: { requiresAuth: true }, // 需要登录
+    },
+    {
       path: '/StockFmark',
       name: 'StockFmark',
       component: ()=>import('@/views/fmark.vue'),

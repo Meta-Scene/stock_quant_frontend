@@ -764,6 +764,11 @@ const onPanelChange = (newDate) => {
 //   });
 // };
 
+const handleLogout = () => {
+  store.logout(); // 调用 store 的 logout 方法
+  router.push('/'); // 跳转到登录页面
+};
+
 </script>
 
 <template>
@@ -830,6 +835,9 @@ const onPanelChange = (newDate) => {
               <el-menu-item index="13">🔴 财务估值</el-menu-item>
             </el-sub-menu>
           </el-menu>
+        </div>
+        <div class="column">
+          <button @click="handleLogout" class="logout-btn">退出登录</button>
         </div>
       </div>
     </div>
@@ -912,6 +920,22 @@ const onPanelChange = (newDate) => {
 </template>
 
 <style>
+/* 退出登录按钮 */
+.logout-btn {
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #ffffff;
+  background-color: #e91e63;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.logout-btn:hover {
+  background-color: #c2185b;
+}
+
 /* 全局 */
 html,
 body {

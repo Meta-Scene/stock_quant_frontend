@@ -29,7 +29,8 @@ export default defineStore('stock', {
     // },
     async login(username, password) {
       try {
-        const response = await fetch(`http://172.16.33.65:8080/user/login`, {
+        // const response = await fetch(`http://172.16.33.65:8080/user/login`, {
+        const response = await fetch(`${BASE}/user/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -44,7 +45,7 @@ export default defineStore('stock', {
 
         const data = await response.json();
         this.user = {
-          username: data.userInfo.userName, // 保存用户名
+          username: data.data.userInfo.userName, // 保存账号
           token: data.accessToken,         // 保存 token
           expireIn: data.expireIn          // 保存 token 过期时间
         };
@@ -56,6 +57,29 @@ export default defineStore('stock', {
     },
     logout() {
       this.user = null;
+    },
+    async register(fakename,username, password) {
+      try {
+        // const response = await fetch(`http://172.16.33.65:8080/user/register`, {
+        const response = await fetch(`${BASE}/user/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userName:fakename, account: username, passWord: password }),
+        });
+
+        if (!response.ok) {
+          throw new Error('注册失败');
+        }
+
+        const data = await response.json();
+        console.log('注册成功:', data);
+        return true;
+      } catch (error) {
+        console.error('注册错误:', error);
+        return false;
+      }
     },
 
 
