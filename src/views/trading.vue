@@ -507,7 +507,7 @@ function gotoPage() {
 }
 
 onMounted(async () => {
-  await store.init()
+  await store.init();
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   // selectedDate.value = redictToNewDay();
   selectedDate.value = '';
@@ -562,7 +562,7 @@ const handleAnalysis = (key, keyPath) => {
   fetchData();
 }
 
-function fetchData() {
+async function fetchData() {
   /* 传参 */
   const params = new URLSearchParams();
   // console.log("股票代码：", stockCode.value, "类型", typeof (stockCode.value));
@@ -606,41 +606,51 @@ function fetchData() {
 
   /* 接口 */
   // 技术指标
-  // let url = `http://120.27.208.55:10003/api/stock_data/${replayIndex.value}`
+  // let url = `http://172.16.33.65:8080/api/stock_data/${replayIndex.value}`
   let url = `http://120.27.208.55:10002/api/stock_data/${replayIndex.value}`
   // 策略类型
   if (strategyIndex.value !== '0') {
-    // url = `http://120.27.208.55:10003/api/stock_analysis/${strategyIndex.value}`;
+    // url = `http://172.16.33.65:8080/api/stock_analysis/${strategyIndex.value}`;
     url = `http://120.27.208.55:10002/api/stock_analysis/${strategyIndex.value}`;
 
   }
   let final=`${url}?${params.toString()}`;
   if(analysisIndex.value!=='0'){
+    // url=`http://172.16.33.65:8080/api/stock_big_data_analysis/${analysisIndex.value}`;
     url=`http://120.27.208.55:10002/api/stock_big_data_analysis/${analysisIndex.value}`;
     final=`${url}`;
   }
-
-  fetch(final, {
+  try{
+    const data=await store.authorizedFetch(final,{
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
     cache: 'no-cache',
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('网络响应失败');
-      }
-      return response.json();
-    })
-    .then(async data => {
+  });
+  // fetch(final, {
+  //   method: 'GET',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //   },
+  //   cache: 'no-cache',
+  // })
+    // .then(response => {
+    //   if (!response.ok) {
+    //     throw new Error('网络响应失败');
+    //   }
+    //   return response.json();
+    // })
+    // .then(async data => {
       console.log('成功:', data);
       const grid = data.grid_data || [];
       if(stockSearch.value==''){
         selectedDate.value=data.date;
       }
+      console.log(grid);
 
-      // console.log("打印日期",data.date);
+
+      console.log("打印日期",data.date);
       //grid.length
       if (data.stock_count === 0) {
         currentPage.value = 0;
@@ -684,10 +694,10 @@ function fetchData() {
         // console.log("first get fmark_total:", fmark_total.value);
 
       }
-    })
-    .catch(error => {
+    // })
+  }catch(error) {
       console.error('数据获取失败:', error);
-    });
+    };
   // console.log("赋值后 fmark_total:", fmark_total.value);
 }
 

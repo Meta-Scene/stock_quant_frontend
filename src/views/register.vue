@@ -3,20 +3,20 @@
     <form @submit.prevent="handleSubmit" class="register-container" novalidate>
       <h1>注册新用户</h1>
       <div class="form-group">
-        <label for="fakename">用户名</label>
+        <label for="username">用户名</label>
         <input
-          id="fakename"
-          v-model="fakename"
+          id="username"
+          v-model="username"
           type="text"
           placeholder="请输入用户名"
           required
         />
       </div>
       <div class="form-group">
-        <label for="username">账号</label>
+        <label for="account">账号</label>
         <input
-          id="username"
-          v-model="username"
+          id="account"
+          v-model="account"
           type="text"
           placeholder="请输入账号"
           required
@@ -50,11 +50,11 @@ const router = useRouter();
 const store = useStockStore();
 const username = ref('');
 const password = ref('');
-const fakename = ref('');
+const account = ref('');
 const errorMessage = ref('');
 
 const handleSubmit = async () => {
-  const success = await store.register(fakename.value,username.value, password.value);
+  const success = await store.register(username.value,account.value, password.value);
   if (success) {
     router.push('/'); // 注册成功后跳转到登录页面
   } else {

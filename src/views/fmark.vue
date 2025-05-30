@@ -21,7 +21,7 @@ const toggleIframe = () => {
 };
 
 const store = useStockStore();
-store.init()
+// store.init()
 const {
   fmark_total,
   favorites
@@ -42,6 +42,7 @@ const current_page = ref(1);
 const total_page = ref(0);
 
 onMounted(async () => {
+  await store.init();
   await store.loadFmarkTotal();
   if (fmark_total.value.length > 0) {
     total_page.value = fmark_total.value.length;
@@ -52,7 +53,7 @@ onMounted(async () => {
   }
 })
 
-function fetchDetail() {
+async function fetchDetail() {
   const params = new URLSearchParams();
   let code;
   // console.log("是否有：", fmark_total);
@@ -69,59 +70,81 @@ function fetchDetail() {
   // console.log("检查：",fmark_total.value[current_page-1]);
 
   // const url = 'http://172.16.32.93:10015/stock_fmark'
+  // const url = `http://172.16.33.65:8080/api/stock_single_data/${strategyIndexValue}`;
   const url = `http://120.27.208.55:10002/api/stock_single_data/${strategyIndexValue}`;
-  fetch(`${url}?${params.toString()}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('网络响应失败');
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('成功:', data);
-      const grid = data.grid_data || [];
-      const flattened = grid.map(itemList => {
-        const name = itemList[0][0] // 股票代码
-        const true_name = itemList[0][12];//股票名称
-        // const true_name = itemList[0][13];//股票名称
-        // console.log("true_name", true_name);
 
-        const kline = itemList.map(d => [
-          d[1],  // 日期
-          d[2],  // open
-          d[3],  // high
-          d[4],  // low
-          d[5],  // close
-          d[6],  // 涨跌幅
-          d[7],  // 成交量
-          d[8],  // 买点
-          d[9], // fmark
-          d[12], // 股票名称
-          // d[7],  // 涨跌幅
-          // d[8],  // 成交量
-          // d[9],  // 买点
-          // d[10], // fmark
-          // d[13], // 股票名称
-        ])
-        return { name, data: kline, true_name }
-      })
-
-      flattened.forEach((stock) => {
-        // console.log("idx",idx);
-        // console.log("stock",stock);
-        initChart(stock)
-      })
-      // let sd = flattened;
-      // initChart(sd)
-    })
-    .catch(error => {
-      console.error('数据获取失败:', error);
+  try {
+    const data = await store.authorizedFetch(`${url}?${params.toString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
     });
+    const grid = data.grid_data || [];
+    const flattened = grid.map(itemList => ({
+      name: itemList[0][0],
+      true_name: itemList[0][12],
+      data: itemList.map(d => [d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[12]])
+    }));
+    flattened.forEach(stock => initChart(stock));
+  } catch (error) {
+    console.error('数据获取失败:', error);
+  }
+
+
+
+  // fetch(`${url}?${params.toString()}`, {
+  //   method: 'GET',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //   },
+  // })
+  //   .then(response => {
+  //     if (!response.ok) {
+  //       throw new Error('网络响应失败');
+  //     }
+  //     return response.json();
+  //   })
+  //   .then(data => {
+  //     console.log('成功:', data);
+  //     const grid = data.grid_data || [];
+  //     const flattened = grid.map(itemList => {
+  //       const name = itemList[0][0] // 股票代码
+  //       const true_name = itemList[0][12];//股票名称
+  //       // const true_name = itemList[0][13];//股票名称
+  //       // console.log("true_name", true_name);
+
+  //       const kline = itemList.map(d => [
+  //         d[1],  // 日期
+  //         d[2],  // open
+  //         d[3],  // high
+  //         d[4],  // low
+  //         d[5],  // close
+  //         d[6],  // 涨跌幅
+  //         d[7],  // 成交量
+  //         d[8],  // 买点
+  //         d[9], // fmark
+  //         d[12], // 股票名称
+  //         // d[7],  // 涨跌幅
+  //         // d[8],  // 成交量
+  //         // d[9],  // 买点
+  //         // d[10], // fmark
+  //         // d[13], // 股票名称
+  //       ])
+  //       return { name, data: kline, true_name }
+  //     })
+
+  //     flattened.forEach((stock) => {
+  //       // console.log("idx",idx);
+  //       // console.log("stock",stock);
+  //       initChart(stock)
+  //     })
+  //     // let sd = flattened;
+  //     // initChart(sd)
+  //   })
+  //   .catch(error => {
+  //     console.error('数据获取失败:', error);
+  //   });
+
+
 }
 
 function splitData(rawData) {

@@ -3,10 +3,10 @@
     <form @submit.prevent="handleSubmit" class="login-container" novalidate>
       <h1>量化超级复盘平台</h1>
       <div class="form-group">
-        <label for="username">账号</label>
+        <label for="account">账号</label>
         <input
-          id="username"
-          v-model="username"
+          id="account"
+          v-model="account"
           type="text"
           placeholder="请输入账号"
           required
@@ -38,14 +38,15 @@ import useStockStore from '@/stores/stockStore';
 
 const router = useRouter();
 const store = useStockStore();
-const username = ref('');
+const account = ref('');
 const password = ref('');
 const errorMessage = ref('');
 
 const handleSubmit = async() => {
-  const success = await store.login(username.value, password.value);
+  const success = await store.login(account.value, password.value);
   if (success) {
     router.push('/trading');
+
   } else {
     errorMessage.value = '用户名或密码错误';
   }
