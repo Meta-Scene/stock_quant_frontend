@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router'
 // import { useStockStore } from '@/stores/stockStore';
 
 const router = createRouter({
@@ -19,17 +19,17 @@ const router = createRouter({
     {
       path: '/StockFmark',
       name: 'StockFmark',
-      component: ()=>import('@/views/fmark.vue'),
+      component: () => import('@/views/fmark.vue'),
       // meta: { requiresAuth: true }, // 需要登录
-      props: route => ({ stockCode: route.query.stockCode }),
+      props: (route) => ({ stockCode: route.query.stockCode }),
     },
     {
       path: '/',
       name: 'Login',
-      component: ()=>import('@/views/login.vue'),
+      component: () => import('@/views/login.vue'),
     },
   ],
-});
+})
 
 // // 路由守卫
 // router.beforeEach((to, from, next) => {

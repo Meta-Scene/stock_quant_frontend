@@ -41,3 +41,15 @@
 //       console.log("flattened",flattened);
 
 //       stockData.value = flattened
+
+// 获取实时数据
+// const params = new URLSearchParams({ ts_code: '000001.SZ' });
+// const url = 'http://120.27.208.55:10002/api/stock_price/realtime_price'
+// const nowData = await store.authorizedFetch(`${url}?${params}`, {
+//   method: 'GET',
+//   // headers: {
+//   //   'Content-Type': 'application/json',
+//   // },
+
+// })
+// console.log('nowData' + nowData.low_price)

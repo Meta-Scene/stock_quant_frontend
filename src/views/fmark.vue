@@ -6,11 +6,17 @@ import { upColor, upBorderColor, downColor, downBorderColor } from '@/stores/def
 import { MA } from '@/utils/MA';
 import useStockStore from '@/stores/stockStore';
 import { storeToRefs } from 'pinia';
+import { isWeekend } from '@/utils/dateUtils'
+import { formatDate, } from '@/utils/dateUtils';
 
 //iframe
 const showIframe = ref(false);
 const iframeUrl = ref('');
-
+// 放实时数据
+let nowDatas = []
+// 判断数据库中是否已经有最新的数据
+let hasData = true
+let kdata = []
 const toggleIframe = () => {
   showIframe.value = !showIframe.value;
   if (showIframe.value) {
@@ -34,7 +40,7 @@ defineProps({ name: 'StockFmark' });
 const route = useRoute();
 const router = useRouter();
 const ts_code = route.query.stockCode;
-const strategyIndexValue=route.query.strategyIndexValue;
+const strategyIndexValue = route.query.strategyIndexValue;
 // console.log(`股票代码: ${ts_code}`);
 // const current_page = ref(find_current_code() + 1);
 // const total_page = ref(fmark_total.value.length);
@@ -78,13 +84,37 @@ async function fetchDetail() {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
+
     const grid = data.grid_data || [];
+    // 请求实时数据
+    const names = grid.map(itemList => itemList[0][0]);
+    const nowDataPromises = names.map(async (name) => {
+      // 往kline里加实时的数据
+      const params = new URLSearchParams({ ts_code: name });
+      const url = 'http://120.27.208.55:10002/api/stock_price/realtime_price'
+      const nowData = await store.authorizedFetch(`${url}?${params}`, {
+        method: 'GET',
+        // headers: {
+        //   'Content-Type': 'application/json',
+        // },
+
+      })
+      // 暂时先处理一下指数接口不对导致的图表问题
+      // console.log('nowData', nowData);
+      if (nowData.ts_code == '000001.SH' || nowData.ts_code == '000016.SH' || nowData.ts_code == '000300.SH' || nowData.ts_code == '000688.SH') {
+        nowData.latest_price = null
+      }
+      return nowData
+    })
+    nowDatas = await Promise.all(nowDataPromises);
+    console.log('nowDatas', nowDatas)
     const flattened = grid.map(itemList => ({
       name: itemList[0][0],
       true_name: itemList[0][12],
       data: itemList.map(d => [d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[12]])
     }));
     flattened.forEach(stock => initChart(stock));
+
   } catch (error) {
     console.error('数据获取失败:', error);
   }
@@ -187,6 +217,23 @@ function initChart(stock) {
   const volumes = data.values.map(v => v[5])
   const buy = data.values.map(v => v[6])
   const fmark = data.values.map(v => v[7])
+  // 日期的添加
+  const nowDate = formatDate(Date.now())
+  console.log('nowDate', nowDate)
+  console.log('aaaaa', data.date[data.date.length - 1])
+  if (!isWeekend() && nowDate !== data.date[data.date.length - 1]) {
+    hasData = false
+    // 加日期
+    data.date.push(nowDate)
+    kdata = JSON.parse(JSON.stringify(data.values));
+    let nowArr = [nowDatas[0].open_price, nowDatas[0].latest_price, nowDatas[0].low_price, nowDatas[0].high_price]
+    kdata.push(nowArr)
+    console.log(data.values.map(v => v.slice(0, 4)))
+    console.log(kdata.map(v => v.slice(0, 4)))
+
+
+  }
+  console.log(hasData)
   // const name = data.values.map(v => v[10])
   const filteredFmark = fmark
     .map((value, index) => (value !== 0 ? [data.date[index], value] : null))
@@ -272,7 +319,8 @@ function initChart(stock) {
         type: 'candlestick',
         // z: 10,
         barWidth: '50%',
-        data: data.values.map(v => v.slice(0, 4)), // [open, high, low, close]
+        // data: data.values.map(v => v.slice(0, 4)), // [open, high, low, close]
+        data: hasData ? data.values.map(v => v.slice(0, 4)) : kdata.map(v => v.slice(0, 4)),
         itemStyle: {
           color: upColor,
           color0: downColor,
@@ -413,7 +461,7 @@ function initChart(stock) {
             if (point === 1) {
               return {
                 // value: [data.date[idx], parseFloat((point - 0.08).toFixed(2))],
-                value: [data.date[idx], data.values[idx][2] - (0.02*data.values[idx][1])],
+                value: [data.date[idx], data.values[idx][2] - (0.02 * data.values[idx][1])],
                 symbolSize: 15,
               }
             }
@@ -429,12 +477,12 @@ function initChart(stock) {
             verticalAlign: 'middle',
             color: '#FFFFFF',
             fontSize: 14,
-            fontWeight:'bold',
+            fontWeight: 'bold',
             formatter: 'B'
           },
         }]
         : []),
-        ...(buy.length > 0 && buy.some(point => point === 2)
+      ...(buy.length > 0 && buy.some(point => point === 2)
         ? [{
           name: '卖点',
           type: 'scatter',
@@ -447,7 +495,7 @@ function initChart(stock) {
             // console.log("data.date[idx]:", data.date[idx]);
             if (point === 2) {
               return {
-                value: [data.date[idx], data.values[idx][3]+(0.02*data.values[idx][1])],
+                value: [data.date[idx], data.values[idx][3] + (0.02 * data.values[idx][1])],
                 symbolSize: 15,
               }
             }
@@ -463,7 +511,7 @@ function initChart(stock) {
             verticalAlign: 'middle',
             color: '#FFFFFF',
             fontSize: 14,
-            fontWeight:'bold',
+            fontWeight: 'bold',
             formatter: 'S'
           },
         }]

@@ -8,6 +8,7 @@ import { formatDate, redictToNewDay } from '@/utils/dateUtils';
 import { splitData } from '@/utils/splitData';
 import { MA } from '@/utils/MA';
 import { pageSize, upColor, upBorderColor, downColor, downBorderColor, strategies, conditions, analysis } from '@/stores/define'
+import { isWeekend } from '@/utils/dateUtils'
 
 const router = useRouter();
 const store = useStockStore();
@@ -25,6 +26,11 @@ const {
   fmark_total,
   favorites
 } = storeToRefs(store);
+// 放实时数据
+let nowDatas = []
+// 判断数据库中是否已经有最新的数据
+let hasData = true
+let kdata = []
 const toggleFavorite = (code) => store.toggleFavorite(code)
 const isFavorited = (code) => favorites.value.includes(code);
 
@@ -42,7 +48,7 @@ function showDetail(stock) {
         name: 'StockFmark',
         query: {
           stockCode: stock.name,
-          strategyIndexValue:strategyIndex.value,
+          strategyIndexValue: strategyIndex.value,
         },
       }).href, '_blank'
     );
@@ -65,6 +71,8 @@ const selectedAnalysis = computed(() => {
 });
 /* 单图表初始化 */
 function initChart(id, stock) {
+
+
   // if (charts.value[id]) {
   //   charts.value[id].dispose();
   // }
@@ -81,6 +89,30 @@ function initChart(id, stock) {
 
   const chart = echarts.init(el);
   const data = splitData(stock.data)
+  const nowDate = formatDate(Date.now())
+  console.log('nowDate', nowDate)
+  if (!isWeekend() && nowDate !== data.date[data.date.length - 1]) {
+    hasData = false
+    // 加日期
+    data.date.push(nowDate)
+    // data.values.push(nowDatas[id[5]])
+    // console.log('nowDatas:', nowDatas[id[5]])
+    const nowData = nowDatas[id[5]]
+    let nowArr = [nowData.open_price, nowData.high_price, nowData.low_price, nowData.latest_price]
+    // 如果数据为空，则使用上一个收盘价填充
+
+    if (nowArr.includes(null)) {
+      let close = data.values[data.values.length - 1][1]
+      nowArr = [close, close, close, close]
+    }
+    console.log('nowArr:', nowArr)
+    kdata = JSON.parse(JSON.stringify(data.values));
+    kdata.push(nowArr);
+    console.log('kdata:', kdata.map(v => v.slice(0, 4)))
+  }
+  // hasData = true
+  console.log(hasData)
+
   // 提取涨跌幅,成交量,买点,半年线,年线,股票名称
   const pctChg = data.values.map(v => v[4]);
   const volumes = data.values.map(v => v[5]);
@@ -223,7 +255,8 @@ function initChart(id, stock) {
         name: '日K',
         type: 'candlestick',
         barWidth: '50%',
-        data: data.values.map(v => v.slice(0, 4)), // [open, high, low, close]
+        // data: data.values.map(v => v.slice(0, 4)), // [open, high, low, close]
+        data: hasData ? data.values.map(v => v.slice(0, 4)) : kdata.map(v => v.slice(0, 4)),
         itemStyle: {
           color: upColor,
           color0: downColor,
@@ -319,7 +352,7 @@ function initChart(id, stock) {
             // console.log("data.date[idx]:", data.date[idx]);
             if (point === 1) {
               return {
-                value: [data.date[idx], data.values[idx][2] - (0.02*data.values[idx][1])],
+                value: [data.date[idx], data.values[idx][2] - (0.02 * data.values[idx][1])],
                 symbolSize: 15,
               }
             }
@@ -335,7 +368,7 @@ function initChart(id, stock) {
             verticalAlign: 'middle',
             color: '#FFFFFF',
             fontSize: 14,
-            fontWeight:'bold',
+            fontWeight: 'bold',
             formatter: 'B'
           },
         }]
@@ -354,7 +387,7 @@ function initChart(id, stock) {
             // console.log("data.date[idx]:", data.date[idx]);
             if (point === 2) {
               return {
-                value: [data.date[idx], data.values[idx][3]+(0.02*data.values[idx][1])],
+                value: [data.date[idx], data.values[idx][3] + (0.02 * data.values[idx][1])],
                 symbolSize: 15,
               }
             }
@@ -370,7 +403,7 @@ function initChart(id, stock) {
             verticalAlign: 'middle',
             color: '#FFFFFF',
             fontSize: 14,
-            fontWeight:'bold',
+            fontWeight: 'bold',
             formatter: 'S'
           },
         }]
@@ -518,7 +551,6 @@ onMounted(async () => {
 
   // 发送初始年和月到后端
   // sendYearAndMonthToBackend(year, month);
-
   fetchData();
   await store.loadFmarkTotal(); //从IDB加载 fmark_total
   // fetchData();
@@ -565,43 +597,56 @@ const handleAnalysis = (key, keyPath) => {
 async function fetchData() {
   /* 传参 */
   const params = new URLSearchParams();
+  // 如果要传的是FormData形式的参数
+  const formParams = new FormData()
   // console.log("股票代码：", stockCode.value, "类型", typeof (stockCode.value));
   // console.log("replayindex：", replayIndex.value, "类型", typeof (replayIndex.value), "strategyIndex:", strategyIndex.value);
   // 技术指标
   if (replayIndex.value === "1" || replayIndex.value === "2" || replayIndex.value === "3" || replayIndex.value === "4" || replayIndex.value === "5" || replayIndex.value === "6" || replayIndex.value === "7") {
     // console.log("技术指标");
     params.append('page', currentPage.value);
-    if(selectedDate.value!==''){
-        selectedDate.value=formatDate(selectedDate.value);
-        params.append('trade_date', selectedDate.value);
+    formParams.append('page', currentPage.value);
+    if (selectedDate.value !== '') {
+      selectedDate.value = formatDate(selectedDate.value);
+      params.append('trade_date', selectedDate.value);
+      formParams.append('trade_date', selectedDate.value);
     }
 
     // params.append('replay_index', replayIndex.value);
+
   }
   // 策略类型
-  if (strategyIndex.value === "1" || strategyIndex.value === "2" || strategyIndex.value === "3" || strategyIndex.value === "4" || strategyIndex.value === "5"||strategyIndex.value === "6") {
+  if (strategyIndex.value === "1" || strategyIndex.value === "2" || strategyIndex.value === "3" || strategyIndex.value === "4" || strategyIndex.value === "5" || strategyIndex.value === "6") {
     params.append('page', currentPage.value);
+    formParams.append('page', currentPage.value);
     if (stockSearch.value.trim() == "") {
       // if (stockName == '') {
-      if(selectedDate.value!==''){
-        selectedDate.value=formatDate(selectedDate.value);
+      if (selectedDate.value !== '') {
+        selectedDate.value = formatDate(selectedDate.value);
         params.append('trade_date', selectedDate.value);
+        formParams.append('trade_date', selectedDate.value);
       }
 
     }
     params.append('ts_code', stockSearch.value);
+    formParams.append('ts_code', stockSearch.value);
     // console.log("url正确");
   }
 
   // 大数据分析
-  if (analysisIndex.value === "1" || analysisIndex.value === "2" || analysisIndex.value === "3" ) {
-  // console.log("技术指标");
-  params.append('page', currentPage.value);
-    if(selectedDate.value!==''){
-        selectedDate.value=formatDate(selectedDate.value);
-        params.append('trade_date', selectedDate.value);
+  if (analysisIndex.value === "1" || analysisIndex.value === "2" || analysisIndex.value === "3") {
+    // console.log("技术指标");
+    params.append('page', currentPage.value);
+    formParams.append('page', currentPage.value);
+    if (selectedDate.value !== '') {
+      selectedDate.value = formatDate(selectedDate.value);
+      params.append('trade_date', selectedDate.value);
+      formParams.append('trade_date', selectedDate.value);
     }
     // params.append('replay_index', replayIndex.value);
+    params.append('ts_code', stockSearch.value);
+    formParams.append('ts_code', stockSearch.value);
+
   }
 
   /* 接口 */
@@ -612,29 +657,36 @@ async function fetchData() {
   if (strategyIndex.value !== '0') {
     // url = `http://172.16.33.65:8080/api/stock_analysis/${strategyIndex.value}`;
     url = `http://120.27.208.55:10002/api/stock_analysis/${strategyIndex.value}`;
+  }
 
-  }
-  let final=`${url}?${params.toString()}`;
-  if(analysisIndex.value!=='0'){
+  if (analysisIndex.value !== '0') {
     // url=`http://172.16.33.65:8080/api/stock_big_data_analysis/${analysisIndex.value}`;
-    url=`http://120.27.208.55:10002/api/stock_big_data_analysis/${analysisIndex.value}`;
-    final=`${url}`;
+    url = `http://120.27.208.55:10002/api/stock_big_data_analysis/${analysisIndex.value}`;
+    // final = `${url}`;
+    //
+    // if (stockSearch.value && analysisIndex.value === '1') {
+    //   url = `http://172.16.33.65:8080/analysis/popular_stock_data`
+    //   final = `${url}`
+    //   console.log(final)
+    // }
   }
-  try{
-    const data=await store.authorizedFetch(final,{
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    cache: 'no-cache',
-  });
-  // fetch(final, {
-  //   method: 'GET',
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //   },
-  //   cache: 'no-cache',
-  // })
+  let final = `${url}?${params.toString()}`;
+  try {
+    const data = await store.authorizedFetch(final, {
+      method: 'GET',
+      // headers: {
+      //   'Content-Type': 'application/json',
+      // },
+      cache: 'no-cache',
+      // body: formParams
+    });
+    // fetch(final, {
+    //   method: 'GET',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   cache: 'no-cache',
+    // })
     // .then(response => {
     //   if (!response.ok) {
     //     throw new Error('网络响应失败');
@@ -642,62 +694,105 @@ async function fetchData() {
     //   return response.json();
     // })
     // .then(async data => {
-      console.log('成功:', data);
-      const grid = data.grid_data || [];
-      if(stockSearch.value==''){
-        selectedDate.value=data.date;
-      }
-      console.log(grid);
+    console.log('成功:', data);
+    const grid = data.grid_data || [];
+    if (stockSearch.value == '') {
+      selectedDate.value = data.date;
+    }
+    console.log(grid);
 
 
-      console.log("打印日期",data.date);
-      //grid.length
-      if (data.stock_count === 0) {
-        currentPage.value = 0;
-      }
-      const flattened = grid.map(itemList => {
-        const name = itemList[0][0] // 股票代码
-        const true_name = itemList[0][11];//股票名称
-        // const true_name = itemList[0][12];//股票名称
-        // console.log("truename", true_name);
-        const kline = itemList.map(d => [
-          d[1],  // 日期
-          d[2],  // open
-          d[3],  // high
-          d[4],  // low
-          d[5],  // close
-          d[6],  // 涨跌幅
-          d[7],  // 成交量
-          d[8],  // 买点
-          d[9], // 半年线
-          d[10], // 年线
-          d[11], // 股票名称
-          // d[7],  // 涨跌幅
-          // d[8],  // 成交量
-          // d[9],  // 买点
-          // d[10], // 半年线
-          // d[11], // 年线
-          // d[12], // 股票名称
-          // d[12], // 卖点
-        ])
-        // console.log("11111111111111111111111", kline[11]);
-        return { name, data: kline, true_name }
+    console.log("打印日期", data.date);
+    //grid.length
+    if (data.stock_count === 0) {
+      currentPage.value = 0;
+    }
+    // 获得股票代码发请求得到最新的k线数据存在nowData里
+    const names = grid.map(itemList => itemList[0][0]);
+    const nowDataPromises = names.map(async (name) => {
+      // 往kline里加实时的数据
+      const params = new URLSearchParams({ ts_code: name });
+      const url = 'http://120.27.208.55:10002/api/stock_price/realtime_price'
+      let nowData = await store.authorizedFetch(`${url}?${params}`, {
+        method: 'GET',
+        // headers: {
+        //   'Content-Type': 'application/json',
+        // },
+
       })
-      stockData.value = flattened
-      stockNumber.value = data.stock_count
-      // 把全部的股票代码拿到
-      if (data.ts_codes) {
-        fmark_total.value = data.ts_codes;
-        await store.saveFmarkTotal();  // 存到 IndexedDB
-        // 在 fetchData 成功后，确保数据同步到本地存储
-        // localStorage.setItem('fmark_total', JSON.stringify(fmark_total.value));
-        // console.log("first get fmark_total:", fmark_total.value);
-
+      // 暂时先处理一下指数接口不对导致的图表问题
+      // console.log('nowData', nowData);
+      if (nowData.ts_code == '000001.SH' || nowData.ts_code == '000016.SH' || nowData.ts_code == '000300.SH' || nowData.ts_code == '000688.SH') {
+        // nowData = await store.authorizedFetch(`http://172.16.32.121:8080/api/index_price/realtime_price?${params}`, {
+        //   method: 'GET',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //     'Authorization': `048e386c-74d9-4bee-abb9-692dcf9a283e`
+        //     // 'accessToken': '048e386c-74d9-4bee-abb9-692dcf9a283e'
+        //   },
+        // })
+        // console.log('nowData111111111111111111111', nowData)
+        nowData.latest_price = null;
       }
+      return nowData
+    })
+    const nowDataArr = await Promise.all(nowDataPromises);
+    nowDatas = nowDataArr;
+    console.log('nowDatas', nowDatas);
+    const flattened = grid.map((itemList, index) => {
+      const name = itemList[0][0] // 股票代码
+      console.log(name)
+      const true_name = itemList[0][11];//股票名称
+      // const true_name = itemList[0][12];//股票名称
+      // console.log("truename", true_name);
+      const kline = itemList.map(d => [
+        d[1],  // 日期
+        d[2],  // open
+        d[3],  // high
+        d[4],  // low
+        d[5],  // close
+        d[6],  // 涨跌幅
+        d[7],  // 成交量
+        d[8],  // 买点
+        d[9], // 半年线
+        d[10], // 年线
+        d[11], // 股票名称
+        // d[7],  // 涨跌幅
+        // d[8],  // 成交量
+        // d[9],  // 买点
+        // d[10], // 半年线
+        // d[11], // 年线
+        // d[12], // 股票名称
+        // d[12], // 卖点
+      ])
+      //获取到最新的日期
+      // console.log(kline[itemList.length - 1][0]);
+      // 如果里面没有今天的数据，就把实时的数据加进去
+      // kline.push(
+      //   [
+      //     '2025-06-14',  // 日期
+      //     nowDatas[index].open_price,  // open
+      //     nowDatas[index].high_price,  // high
+      //     nowDatas[index].low_price,  // low
+      //     nowDatas[index].latest_price,  // close
+      //   ])
+      // console.log("11111111111111111111111", kline);
+      return { name, data: kline, true_name }
+    })
+    stockData.value = flattened
+    stockNumber.value = data.stock_count
+    // 把全部的股票代码拿到
+    if (data.ts_codes) {
+      fmark_total.value = data.ts_codes;
+      await store.saveFmarkTotal();  // 存到 IndexedDB
+      // 在 fetchData 成功后，确保数据同步到本地存储
+      // localStorage.setItem('fmark_total', JSON.stringify(fmark_total.value));
+      // console.log("first get fmark_total:", fmark_total.value);
+    }
     // })
-  }catch(error) {
-      console.error('数据获取失败:', error);
-    };
+  } catch (error) {
+    console.error('数据获取失败:', error);
+  };
   // console.log("赋值后 fmark_total:", fmark_total.value);
 }
 
@@ -723,7 +818,7 @@ watch(stockData, () => {
     }, 0)
   })
 }, { immediate: true })
-const nonTradingDays = ['2025-05-01', '2025-05-02', '2025-05-03','2025-05-04','2025-05-05'];
+const nonTradingDays = ['2025-05-01', '2025-05-02', '2025-05-03', '2025-05-04', '2025-05-05'];
 
 const pickerOptions = (date) => {
   // 打印传入的原始日期对象
@@ -795,7 +890,8 @@ const handleLogout = () => {
         </div>
         <div class="column">
           <span class="label">日期</span>
-          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" style="width: 150px" :disabled-date="pickerOptions" @panel-change="onPanelChange"/>
+          <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" size="small" style="width: 150px"
+            :disabled-date="pickerOptions" @panel-change="onPanelChange" />
         </div>
         <div class=" column">
           <el-menu :default-active="replayIndex" mode="horizontal" class="strategy-menu" @select="handleReplay"
